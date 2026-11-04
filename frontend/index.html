@@ -391,34 +391,27 @@
 <div class="flex items-center justify-between border-b border-primary-container/10 pb-space-sm mb-space-sm">
 <div class="flex items-center gap-2">
 <span class="material-symbols-outlined text-secondary text-[18px]">menu_book</span>
-<span class="font-subhead-uppercase text-subhead-uppercase text-primary tracking-[0.25em] uppercase">ESG DISPATCH &amp; CRITIC JOURNAL</span>
+<span class="font-subhead-uppercase text-subhead-uppercase text-primary tracking-[0.25em] uppercase">REPORT SUMMARY</span>
 </div>
-<span class="font-data-mono text-[10px] text-on-surface-variant bg-surface-container-lowest px-2 py-0.5 rounded-full">ISSUE #42</span>
+<span class="font-data-mono text-[10px] text-on-surface-variant bg-surface-container-lowest px-2 py-0.5 rounded-full">LATEST RUN</span>
 </div>
-<!-- Editorial Formatted Markdown Article Body -->
 <article class="flex flex-col gap-space-sm text-on-surface">
 <div class="flex flex-col gap-1">
-<h3 class="font-headline-sm text-[20px] text-primary-container leading-snug font-normal">
-          Q3 Synthesis: Decoupling Energy Density from Luxury Retail
-        </h3>
-<span class="font-data-mono text-[10px] text-secondary tracking-widest uppercase">DISPATCH FILED: OCT 2024 • VOL. XII</span>
+<h3 id="reportTitle" class="font-headline-sm text-[20px] text-primary-container leading-snug font-normal">Latest reporting period</h3>
+<span id="reportMeta" class="font-data-mono text-[10px] text-secondary tracking-widest uppercase">ACTIVITY DATA SUMMARY</span>
 </div>
-<p class="font-body-lg text-body-lg text-on-surface/90 leading-relaxed font-light">
-        A critical inflection occurred across European distribution hubs: while atelier throughput rose by 14%, aggregate carbon intensity descended by 2.4% year-over-year. Through rigorous walk-forward ensemble models, our data verifies that renewable microgrid installations across Florence and Lyon ateliers successfully severed revenue output from GHG amplification.
-      </p>
+<p id="reportNarrative" class="font-body-lg text-body-lg text-on-surface/90 leading-relaxed font-light">Loading the latest CarbonTrace results…</p>
 <div class="p-space-sm rounded-lg bg-surface-container-lowest/90 my-1">
-<p class="font-body-sm text-[12px] italic text-primary-fixed-dim leading-relaxed">
-          "Key Takeaway: Decentralized yarn spinning and natural enzyme finishing lowered certified Scope 3 intensity below the critical 32,000 metric ton threshold for the first time in modern atelier history."
-        </p>
+<p id="reportTakeaway" class="font-body-sm text-[12px] italic text-primary-fixed-dim leading-relaxed">The largest included emissions source will appear here.</p>
 </div>
 <div class="flex items-center justify-between pt-2">
 <div class="flex items-center gap-2">
 <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-headline-sm text-[13px] font-bold">
-            CS
+            CT
           </div>
 <div class="flex flex-col">
-<span class="font-body-sm text-[12px] text-primary font-medium">Chief Sustainability Atelier</span>
-<span class="font-data-mono text-[9px] text-secondary">VERIFIED &amp; ACCREDITED ✦</span>
+<span class="font-body-sm text-[12px] text-primary font-medium">CarbonTrace pipeline</span>
+<span id="reportStatus" class="font-data-mono text-[9px] text-secondary">Required report fields pending</span>
 </div>
 </div>
 <span class="material-symbols-outlined text-primary-container text-[20px]">verified_user</span>
@@ -584,6 +577,49 @@
         ${xLabels}`;
     }
 
+    function buildNaturalSummary(payload) {
+      const metrics = payload.metrics || {};
+      const startYear = payload.period.start_year;
+      const endYear = payload.period.end_year;
+      const change = Number(metrics.org_net_change_pct);
+      const changeSentence = Number.isFinite(change)
+        ? `Compared with ${startYear}, emissions were ${formatNumber(Math.abs(change), 1)}% ${change >= 0 ? "higher" : "lower"}.`
+        : "A percentage change was not available for this period.";
+      const scopeTotal = (payload.scopes || []).reduce((sum, item) => sum + Number(item.tco2e || 0), 0);
+      const largestScope = [...(payload.scopes || [])].sort((a, b) => Number(b.tco2e) - Number(a.tco2e))[0];
+      const largestShare = largestScope && scopeTotal
+        ? (Number(largestScope.tco2e) / scopeTotal) * 100
+        : null;
+      const largestScopeName = largestScope
+        ? largestScope.label.toLowerCase().includes("scope 2")
+          ? "purchased electricity (Scope 2)"
+          : largestScope.label.toLowerCase().includes("scope 1")
+            ? "fuel and fleet (Scope 1)"
+            : largestScope.label.toLowerCase().includes("scope 3")
+              ? "business travel and freight (Scope 3)"
+              : largestScope.label
+        : "an included source";
+      const sourceSentence = payload.provenance === "SIMULATED_DEMO"
+        ? "This run uses simulated activity data for the class-project demonstration."
+        : `This run uses activity data from ${payload.provenance}.`;
+      const boundarySentence = "The total covers only the activity categories listed in this prototype; OWID is used as national context, not as company emissions.";
+      const ridgeRmse = Number(metrics.ridge_rmse_tco2e);
+      const naiveRmse = Number(metrics.naive_rmse_tco2e);
+      let forecastSentence = "A forecast is not available for this reporting period.";
+      if (Number.isFinite(ridgeRmse) && Number.isFinite(naiveRmse)) {
+        forecastSentence = metrics.worse_than_baseline
+          ? `On ${metrics.walk_forward_folds} walk-forward test folds, Ridge did not beat the previous-year baseline, so treat its projection as illustrative.`
+          : `On ${metrics.walk_forward_folds} walk-forward test folds, Ridge had lower RMSE than the previous-year baseline; the projection is still illustrative because the history is short.`;
+      }
+
+      return {
+        narrative: `For ${payload.organization}, estimated emissions from the included activities were ${formatNumber(metrics.end_org_tco2e, 1)} tCO₂e in ${endYear}. ${changeSentence} ${sourceSentence} ${boundarySentence} ${forecastSentence}`,
+        takeaway: largestScope
+          ? `The largest included source was ${largestScopeName}, at ${formatNumber(largestScope.tco2e, 1)} tCO₂e${largestShare == null ? "" : ` (${formatNumber(largestShare, 1)}% of the included total)`}.`
+          : "No scope breakdown was available for this run.",
+      };
+    }
+
     function hydrate(payload) {
       latestPayload = payload;
       document.title = "CarbonTrace | Organizational Carbon Dashboard";
@@ -649,17 +685,20 @@
       setExactText("ISSUE #42", "LATEST RUN");
       setExactText("DISPATCH FILED: OCT 2024 • VOL. XII", `${payload.organization} · ${payload.provenance}`);
       const reportSection = Array.from(document.querySelectorAll("section")).find((section) =>
-        section.textContent.includes("ESG DISPATCH & CRITIC JOURNAL"));
+        section.textContent.includes("REPORT SUMMARY"));
       const reportArticle = reportSection?.querySelector("article");
       if (reportArticle) {
-        const title = reportArticle.querySelector("h3");
-        const paragraphs = reportArticle.querySelectorAll("p");
-        if (title) title.textContent = `CarbonTrace report · ${payload.period.start_year}–${payload.period.end_year}`;
-        if (paragraphs[0]) {
-          paragraphs[0].textContent = payload.report || "No generated report is available.";
-          paragraphs[0].style.whiteSpace = "pre-wrap";
-        }
-        paragraphs[1]?.remove();
+        const summary = buildNaturalSummary(payload);
+        const title = reportArticle.querySelector("#reportTitle");
+        const meta = reportArticle.querySelector("#reportMeta");
+        const narrative = reportArticle.querySelector("#reportNarrative");
+        const takeaway = reportArticle.querySelector("#reportTakeaway");
+        const status = reportArticle.querySelector("#reportStatus");
+        if (title) title.textContent = `Carbon footprint summary · ${payload.period.start_year}–${payload.period.end_year}`;
+        if (meta) meta.textContent = `${payload.organization} · ${payload.provenance}`;
+        if (narrative) narrative.textContent = summary.narrative;
+        if (takeaway) takeaway.textContent = summary.takeaway;
+        if (status) status.textContent = payload.critic_approved ? "Required report fields present" : "Review flagged missing report fields";
       }
       setExactText("INNER PEACE CARBON INTELLIGENCE © 2024", "CARBONTRACE CLASS PROJECT · SIMULATED/EXTERNAL ACTIVITY DATA");
       setExactText("Chief Sustainability Atelier", "CarbonTrace reporting agent");
