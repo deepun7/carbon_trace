@@ -1,6 +1,4 @@
 import os
-import json
-from groq import Groq
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -8,95 +6,126 @@ from state import CarbonAgentState
 
 load_dotenv()
 
-def get_candidate_groq_models(api_key: str) -> list:
-    """Returns an ordered list of verified text-generation LLMs available on this Groq key."""
-    # Exact models confirmed working on your Groq account + top text models
-    preferred_order = [
-        "openai/gpt-oss-120b",
-        "qwen/qwen3.8-27b",
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "llama3-70b-8192",
-        "llama3-8b-8192",
-        "gemma2-9b-it",
-        "allam-2-7b"
-    ]
-    blocked_keywords = [
-        "orpheus", "canopylabs", "whisper", "guard", "tts", 
-        "embed", "vision", "audio", "speech", "playai"
-    ]
-    try:
-        client = Groq(api_key=api_key)
-        models_response = client.models.list()
-        available_ids = [m.id for m in models_response.data]
+def compile_deterministic_verified_report(state: CarbonAgentState, llm_summary: str = None) -> str:
+    """Generates a deterministic Markdown report with honest boundary, baseline comparison, and provenance disclosures."""
+    m = state.get("computed_metrics", {})
+    s = state.get("scope_breakdown", {})
+    ml = state.get("ml_evaluation_metrics", {})
+    ef = state.get("emission_factors_audit", {})
+    dq = state.get("data_quality_report", {})
+    anoms = state.get("anomalies_detected", [])
+    fc = state.get("forecast_records", [])
 
-        candidates = [m for m in preferred_order if m in available_ids]
-        for m in available_ids:
-            if m not in candidates and not any(b in m.lower() for b in blocked_keywords):
-                candidates.append(m)
+    provenance = m.get("data_provenance", "SIMULATED_DEMO")
+    fac_count = m.get("facilities_aggregated", 1)
+    horizon_label = ml.get("forecast_horizon_label", "Future Horizon")
 
-        return candidates if candidates else preferred_order
-    except Exception:
-        return preferred_order
+    s1_val = list(s.values())[0] if len(s) > 0 else 0.0
+    s2_val = list(s.values())[1] if len(s) > 1 else 0.0
+    s3_val = list(s.values())[2] if len(s) > 2 else 0.0
+
+    anom_rows = "\n".join(
+        [f"| {a['year']} | {a['org_tco2e']} tCO2e | {a['org_yoy_pct']}% | {a['z_score']} | {a['type']} |" for a in anoms]
+    ) or "| None | - | - | - | - |"
+
+    fc_rows = "\n".join(
+        [f"| {r['year']} | {r['predicted_org_tco2e']} tCO2e | {r['ci_lower_tco2e']} – {r['ci_upper_tco2e']} tCO2e |" for r in fc]
+    ) or "| N/A | Short History | N/A |"
+
+    llm_block = f"\n### Optional AI Executive Commentary\n> {llm_summary}\n" if llm_summary else ""
+
+    if ml.get("status") == "SKIPPED_SHORT_HISTORY":
+        ml_section = f"**ML Evaluation Status:** Skipped ({ml.get('reason')})"
+    else:
+        baseline_alert = (
+            f"\n> ⚠️ **Baseline Comparison Warning:** {ml.get('baseline_comparison_note')}\n"
+            if ml.get("worse_than_baseline")
+            else f"\n> ✔️ **Baseline Comparison Note:** {ml.get('baseline_comparison_note')}\n"
+        )
+        ml_section = f"""{baseline_alert}
+- **Walk-Forward Evaluation Window:** **{ml.get('test_period')}** (**{ml.get('walk_forward_folds')}** expanding one-step-ahead test folds).
+- **Primary Model ({ml.get('forecast_model')}):** **RMSE = {ml.get('rmse_tco2e')} tCO2e**, **MAE = {ml.get('mae_tco2e')} tCO2e**, **MAPE = {ml.get('mape_pct')}%**, **Out-of-Sample R² (Variance Explained vs Mean Baseline, NOT Accuracy) = {ml.get('r2_score')}**.
+- **Baseline Comparison ({ml.get('baseline_model')}):** **Naive RMSE = {ml.get('baseline_naive_rmse_tco2e')} tCO2e**, **Naive MAE = {ml.get('baseline_naive_mae_tco2e')} tCO2e**, **Naive MAPE = {ml.get('baseline_naive_mape_pct')}%** (RMSE Skill vs Baseline: **{ml.get('rmse_skill_over_naive_pct')}%**).
+- **Anomaly Method Agreement ({ml.get('anomaly_model')}):** **Agreement F1 = {ml.get('consensus_f1_score')}** (Precision: `{ml.get('consensus_precision')}`, Recall: `{ml.get('consensus_recall')}`). *Note: This measures agreement between two unsupervised methods (Isolation Forest vs Z-Score), not ground-truth accuracy.*
+- **Optional Exploratory Scope Pattern Grouping:** {ml.get('clustering_model')} Silhouette Score = **{ml.get('silhouette_score')}**."""
+
+    return f"""# Automated Organizational Carbon Footprint & OWID Benchmark Report — {m.get('org_name')}
+
+> **Data Provenance & Boundary Notice:** Organization activity records in this prototype report are **{provenance}** data (`{dq.get('organization_data_source')}`), aggregated across **{fac_count} facilities** for **{m.get('org_name')}**. Estimates reflect **included activity categories only** (stationary diesel/natural gas, diesel fleet, purchased grid electricity, business flights, and HGV road freight), not a complete corporate inventory. National macro benchmark data is sourced from the **Our World in Data (OWID) CO2 Dataset** for **{m.get('benchmark_country')}**.
+
+## 1. Executive Summary & Corporate Carbon Trajectory
+Between **{m.get('start_year')}** and **{m.get('end_year')}**, **{m.get('org_name')}** recorded a starting organizational footprint (across included categories) of **{m.get('start_org_tco2e')} tCO2e** and a latest annual footprint of **{m.get('end_org_tco2e')} tCO2e**, representing a net change of **{m.get('org_net_change_pct')}%** and a compound annual growth rate (CAGR) of **{m.get('org_cagr_pct')}%**. Cumulative emissions across the period totaled **{m.get('cumulative_org_tco2e')} tCO2e**.
+{llm_block}
+| Metric Category | Organizational Value ({m.get('org_name')}) | National OWID Benchmark ({m.get('benchmark_country')}) |
+| :--- | :--- | :--- |
+| **Data Provenance & Boundary** | **{provenance} ({fac_count} Facilities, Included Categories)** | **OWID National Macro Dataset** |
+| **Latest Annual Emissions ({m.get('end_year')})** | **{m.get('end_org_tco2e')} tCO2e** | **{m.get('owid_national_end_co2_mt')} Mt CO2** |
+| **Net Trajectory Change ({m.get('start_year')}–{m.get('end_year')})** | **{m.get('org_net_change_pct')}%** | **{m.get('owid_national_net_change_pct')}%** |
+| **Compound Annual Growth Rate (CAGR)** | **{m.get('org_cagr_pct')}%** | **{m.get('owid_national_cagr_pct')}%** |
+| **CAGR Decoupling Alpha** | **{m.get('cagr_decoupling_alpha_pct')}%** | Baseline Reference |
+
+## 2. Included GHG Scope 1, 2 & 3 Activity Categories & Factor Citations
+Facility-level operational inputs were aggregated by `(org_id, year)` and converted into **tCO2e** using documented conversion factors (Registry `{ef.get('registry_version')}`).
+> **Static Reference Factor Limitation:** Static 2024 reference emission factors are applied across all historical years in this prototype for consistent trend comparison; formal historical regulatory accounting requires year-specific annual grid and fuel factors.
+- **Scope 1 (Included Stationary & Fleet Combustion):** **{s1_val} tCO2e**
+  - *Stationary Diesel:* `{ef.get('diesel_stationary', {}).get('value')} kg CO2e/L` — {ef.get('diesel_stationary', {}).get('source')} ({ef.get('diesel_stationary', {}).get('url')})
+  - *Natural Gas:* `{ef.get('natural_gas', {}).get('value')} kg CO2e/m3` — {ef.get('natural_gas', {}).get('source')} ({ef.get('natural_gas', {}).get('url')})
+  - *Fleet Transport (Assumed Diesel LCV Average):* `{ef.get('fleet_transport', {}).get('value')} kg CO2e/km` — {ef.get('fleet_transport', {}).get('source')}
+- **Scope 2 (Purchased Electricity — Location-Based):** **{s2_val} tCO2e**
+  - *Grid Emission Factor ({m.get('benchmark_country')}):* `{m.get('grid_ef_kg_per_kwh')} kg CO2e/kWh` — {m.get('grid_ef_source')} ({ef.get('grid_electricity', {}).get('url', 'Official Registry')})
+- **Scope 3 (Included Business Air Travel & HGV Road Freight Only):** **{s3_val} tCO2e**
+  - *Business Air Travel:* `{ef.get('business_flight', {}).get('value')} kg CO2e/pkm` — {ef.get('business_flight', {}).get('source')}
+  - *HGV Road Freight:* `{ef.get('road_freight', {}).get('value')} kg CO2e/ton-km` — {ef.get('road_freight', {}).get('source')}
+
+## 3. National Benchmarking Against OWID Macro Telemetry
+National territorial emissions for **{m.get('benchmark_country')}** from the Our World in Data (OWID) dataset reached **{m.get('owid_national_end_co2_mt')} Mt CO2** with a national CAGR of **{m.get('owid_national_cagr_pct')}%**. Organizational estimates (`tCO2e`) are maintained strictly separate from national macro totals (`Mt CO2`).
+
+## 4. Walk-Forward Forecast ({horizon_label}) vs Baseline & Anomaly Method Agreement
+{ml_section}
+
+### Detected Statistical Volatility Outliers (`|Z| >= 1.65`)
+| Year | Organizational Emissions | YoY Change | Z-Score | Classification |
+| :--- | :--- | :--- | :--- | :--- |
+{anom_rows}
+
+### {horizon_label} Illustrative Walk-Forward Projection
+*Note: Projections from limited annual observations are illustrative trend extrapolations. The error band (`±1.96 × Walk-Forward RMSE × √step`) is an approximate heuristic error band, not a formally calibrated 95% prediction interval.*
+| Year | Projected Footprint | Approximate Error Band (±1.96 × RMSE × √step) |
+| :--- | :--- | :--- |
+{fc_rows}
+
+## 5. Automated Decarbonization Roadmap & Scope Abatement Actions
+1. **Scope 2 Renewable Electricity Procurement:** Transitioning purchased facility electricity (`{s2_val} tCO2e`) to renewable PPAs reduces location-based grid exposure (`{m.get('grid_ef_kg_per_kwh')} kg CO2e/kWh`).
+2. **Scope 1 Thermal & Fleet Decarbonization:** Electrifying diesel commercial fleets and upgrading stationary combustion units across all **{fac_count} facilities**.
+3. **Scope 3 Freight & Aviation Optimization:** Shifting HGV road freight (`0.10455 kg CO2e/ton-km`) to rail corridors and prioritizing virtual collaboration.
+"""
 
 
 def reporting_agent(state: CarbonAgentState) -> dict:
-    logs = state.get("agent_logs", [])
+    logs = list(state.get("agent_logs", []))
     revision = state.get("revision_count", 0)
-    feedback = state.get("critic_feedback", None)
-
+    use_llm = state.get("use_llm_narrative", False)
     api_key = os.getenv("GROQ_API_KEY", "").strip()
-    if not api_key:
-        raise ValueError("GROQ_API_KEY is missing in .env file!")
 
-    candidate_models = get_candidate_groq_models(api_key)
-
-    system_prompt = """You are an elite Chief Sustainability Officer (CSO) and ML Carbon Accounting AI Agent.
-Generate a rigorous, quantitative, corporate-grade Carbon Footprint & ML Forecast Report in Markdown.
-
-STRICT RULES:
-1. ONLY use the exact numerical values provided in the JSON metrics. NEVER invent numbers.
-2. You MUST include the exact latest CO2 value (end_co2_mt) and exact net_change_pct value verbatim in Section 1.
-3. Structure the report with these exact 5 Markdown sections:
-   - ## 1. Executive Summary & Carbon Trajectory
-   - ## 2. GHG Protocol Scope Breakdown (Scope 1, 2 & 3 Proxies)
-   - ## 3. Machine Learning Forecasting (2024–2030) & Anomaly Evaluation (F1, R², RMSE, Silhouette)
-   - ## 4. Per-Capita & Energy Efficiency Benchmarking
-   - ## 5. Automated Decarbonization Roadmap & Actionable Recommendations
-4. Include a Markdown summary table of key metrics and ML evaluation scores (R², RMSE, F1-Score, Silhouette Score)."""
-
-    user_payload = f"""
-Target Entity / Region: {state['target_entity']}
-Data Quality Notes: {json.dumps(state.get('data_quality_notes', []))}
-Computed Quantitative Metrics: {json.dumps(state.get('computed_metrics', {}), indent=2)}
-GHG Scope Breakdown (Latest Year): {json.dumps(state.get('scope_breakdown', {}), indent=2)}
-Statistical Anomalies Detected: {json.dumps(state.get('anomalies_detected', []), indent=2)}
-Machine Learning Model Evaluation Metrics (F1, R2, RMSE, Silhouette): {json.dumps(state.get('ml_evaluation_metrics', {}), indent=2)}
-2024-2030 ML Forecast Trajectory: {json.dumps(state.get('forecast_records', []), indent=2)}
-"""
-
-    if feedback:
-        user_payload += f"\n\n⚠️ CRITIC AGENT FEEDBACK FROM PREVIOUS DRAFT (MUST FIX):\n{feedback}"
-
-    # Automatic Self-Healing Model Fallback Loop
-    last_error = None
-    for model_name in candidate_models:
+    llm_summary = None
+    if use_llm and api_key and revision == 0:
         try:
-            logs.append(f"✍️ [Reporting Agent] Generating Executive ESG & ML Report using '{model_name}' (Iteration #{revision + 1})...")
-            llm = ChatGroq(model=model_name, temperature=0.2, api_key=api_key)
-            response = llm.invoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_payload)
+            logs.append("✍️ [Reporting Agent] Generating optional LLM executive summary...")
+            llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.1, api_key=api_key)
+            m = state.get("computed_metrics", {})
+            resp = llm.invoke([
+                SystemMessage(content="Write a concise 2-sentence executive summary using only the exact provided metrics."),
+                HumanMessage(content=f"Org: {m.get('org_name')}, Provenance: {m.get('data_provenance')}, Latest: {m.get('end_org_tco2e')} tCO2e, Net Change: {m.get('org_net_change_pct')}%.")
             ])
-            logs.append(f"✅ [Reporting Agent] Draft ESG & ML report synthesized via '{model_name}'.")
-            return {
-                "draft_report": response.content,
-                "revision_count": revision + 1,
-                "agent_logs": logs
-            }
+            llm_summary = resp.content.strip()
         except Exception as e:
-            last_error = e
-            logs.append(f"⚠️ [Reporting Agent] Model '{model_name}' skipped ({str(e)[:60]}...). Trying next model...")
-            continue
+            logs.append(f"⚠️ [Reporting Agent] Optional LLM narrative skipped ({str(e)[:40]}).")
 
-    raise RuntimeError(f"All candidate Groq models failed. Last error: {last_error}")
+    logs.append("📄 [Reporting Agent] Compiling deterministic Markdown report with dynamic horizon & boundary disclosures...")
+    report_md = compile_deterministic_verified_report(state, llm_summary=llm_summary)
+
+    return {
+        "draft_report": report_md,
+        "revision_count": revision + 1,
+        "agent_logs": logs
+    }

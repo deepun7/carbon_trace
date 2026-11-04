@@ -1,71 +1,235 @@
 import os
+import time
+import sqlite3
 import pandas as pd
 from state import CarbonAgentState
+import seed_enterprise_db
 
 OWID_CSV_URL = "https://raw.githubusercontent.com/owid/co2-data/master/owid-co2-data.csv"
 CACHE_DIR = "data"
-CACHE_FILE = os.path.join(CACHE_DIR, "owid_co2_cache.csv")
+OWID_CACHE_FILE = os.path.join(CACHE_DIR, "owid_co2_cache.csv")
+EXTERNAL_DROPZONE_CSV = os.path.join(CACHE_DIR, "external_erp_dropzone.csv")
+CACHE_TTL_SECONDS = 24 * 3600
 
-REQUIRED_COLUMNS = [
-    "country", "year", "iso_code", "population", "gdp",
-    "co2", "co2_per_capita", "co2_per_gdp",
-    "coal_co2", "oil_co2", "gas_co2", "cement_co2", "flaring_co2",
-    "methane", "nitrous_oxide", "primary_energy_consumption"
+NUMERIC_ACTIVITY_COLS = [
+    "stationary_diesel_liters", "natural_gas_m3",
+    "fleet_transport_km", "purchased_electricity_kwh",
+    "business_air_travel_pkm", "supply_chain_freight_ton_km"
 ]
 
+OWID_COLS = [
+    "country", "year", "iso_code", "population", "gdp",
+    "co2", "co2_per_capita", "co2_per_gdp", "primary_energy_consumption"
+]
+
+def _validate_and_clean_activity_df(raw_df: pd.DataFrame, org_name: str, source_label: str) -> pd.DataFrame:
+    """Strictly validates schema, numeric types, non-negativity, duplicate facility-years, and provenance consistency."""
+    missing = [c for c in (["year"] + NUMERIC_ACTIVITY_COLS) if c not in raw_df.columns]
+    if missing:
+        raise ValueError(f"{source_label} missing required columns: {missing}")
+
+    df = raw_df.copy()
+
+    # 1. Strict Organization Filtering (Bug #1 Fix: NEVER fall back to unmatched organizations!)
+    if "org_id" in df.columns:
+        df = df[df["org_id"].astype(str).str.strip().str.lower() == org_name.strip().lower()].copy()
+        if df.empty:
+            raise ValueError(f"Organization '{org_name}' not found in {source_label} 'org_id' column.")
+    else:
+        df["org_id"] = org_name
+
+    if "facility_id" not in df.columns:
+        df["facility_id"] = "EXTERNAL-FAC-01"
+
+    # 2. Validate Numeric Types & Reject NaNs or Negative Activity Values
+    for col in ["year"] + NUMERIC_ACTIVITY_COLS:
+        try:
+            df[col] = pd.to_numeric(df[col], errors="raise")
+        except Exception as exc:
+            raise ValueError(f"Non-numeric values found in column '{col}' of {source_label}: {exc}")
+
+        if df[col].isna().any():
+            raise ValueError(f"Missing/NaN values found in required column '{col}' of {source_label}.")
+
+    df["year"] = df["year"].astype(int)
+
+    for col in NUMERIC_ACTIVITY_COLS:
+        if (df[col] < 0).any():
+            raise ValueError(f"Negative activity values are invalid (found in column '{col}' of {source_label}).")
+
+    # 3. Reject Duplicate (org_id, facility_id, year) Records
+    if df.duplicated(subset=["org_id", "facility_id", "year"]).any():
+        raise ValueError(f"Duplicate (org_id, facility_id, year) records detected in {source_label}.")
+
+    # 4. Reject Mixed Data Provenance within the Same Organization Dataset
+    if "data_provenance" in df.columns:
+        unique_prov = df["data_provenance"].dropna().astype(str).str.strip().unique()
+        if len(unique_prov) > 1:
+            raise ValueError(f"Mixed data_provenance values detected in {source_label}: {list(unique_prov)}.")
+        df["data_provenance"] = unique_prov[0] if len(unique_prov) == 1 else "EXTERNAL_CSV"
+    else:
+        df["data_provenance"] = "EXTERNAL_CSV"
+
+    return df
+
+
+def _load_and_aggregate_org_activity(
+    org_name: str,
+    start_year: int,
+    end_year: int,
+    custom_path: str = None
+) -> tuple[pd.DataFrame, str, str, int, list[int]]:
+    if start_year > end_year:
+        raise ValueError(f"Invalid period: start_year ({start_year}) > end_year ({end_year}).")
+
+    seed_enterprise_db.initialize_enterprise_data_store()
+
+    csv_candidate = custom_path if (custom_path and os.path.exists(custom_path)) else (
+        EXTERNAL_DROPZONE_CSV if os.path.exists(EXTERNAL_DROPZONE_CSV) else None
+    )
+
+    if csv_candidate:
+        raw_df = pd.read_csv(csv_candidate)
+        source_label = f"EXTERNAL_CSV ({os.path.basename(csv_candidate)})"
+        validated_df = _validate_and_clean_activity_df(raw_df, org_name, source_label)
+        window_df = validated_df[(validated_df["year"] >= start_year) & (validated_df["year"] <= end_year)].copy()
+        if window_df.empty:
+            raise ValueError(f"No activity records in {source_label} for '{org_name}' in period {start_year}-{end_year}.")
+    else:
+        conn = sqlite3.connect(seed_enterprise_db.DB_PATH)
+        query = """
+            SELECT org_id, facility_id, year,
+                   stationary_diesel_liters, natural_gas_m3, fleet_transport_km,
+                   purchased_electricity_kwh, business_air_travel_pkm,
+                   supply_chain_freight_ton_km, data_provenance
+            FROM enterprise_activity_logs
+            WHERE LOWER(org_id) = LOWER(?) AND year BETWEEN ? AND ?
+            ORDER BY year ASC, facility_id ASC
+        """
+        raw_df = pd.read_sql_query(query, conn, params=(org_name, start_year, end_year))
+        conn.close()
+        source_label = f"SQLITE_DEMO_DB ({os.path.basename(seed_enterprise_db.DB_PATH)})"
+        if raw_df.empty:
+            raise ValueError(f"Organization '{org_name}' has no records in {source_label} for {start_year}-{end_year}.")
+        window_df = _validate_and_clean_activity_df(raw_df, org_name, source_label)
+
+    facility_count = int(window_df["facility_id"].nunique())
+    provenance = str(window_df["data_provenance"].iloc[0])
+
+    agg_df = (
+        window_df.groupby(["org_id", "year"], as_index=False)[NUMERIC_ACTIVITY_COLS]
+        .sum()
+        .sort_values("year")
+        .reset_index(drop=True)
+    )
+    agg_df["facilities_aggregated"] = facility_count
+    agg_df["data_provenance"] = provenance
+
+    observed_years = set(agg_df["year"].astype(int).tolist())
+    expected_years = set(range(int(start_year), int(end_year) + 1))
+    missing_years = sorted(list(expected_years - observed_years))
+    if len(agg_df) > 1:
+    full_span = set(range(int(agg_df["year"].min()), int(agg_df["year"].max()) + 1))
+    gaps = sorted(list(full_span - observed_years))
+    if gaps:
+        raise ValueError(f"Contiguous annual data required for YoY/walk-forward ML; missing years: {gaps}")
+
+    return agg_df, source_label, provenance, facility_count, missing_years
+
+
 def ingestion_agent(state: CarbonAgentState) -> dict:
+    org_name = state.get("org_name", "Apex Manufacturing Pvt Ltd")
     entity = state["target_entity"]
     start_year = state["start_year"]
     end_year = state["end_year"]
-    logs = state.get("agent_logs", [])
-    notes = []
+    custom_path = state.get("data_source_path")
+    logs = list(state.get("agent_logs", []))
 
-    logs.append(f"📥 [Ingestion Agent] Initiating data pipeline for '{entity}' ({start_year}-{end_year})...")
-
-    # 1. Smart Caching Mechanism
+    logs.append(f"📥 [Ingestion Agent] Loading organization activity for '{org_name}' & OWID benchmark for '{entity}' ({start_year}-{end_year})...")
     os.makedirs(CACHE_DIR, exist_ok=True)
-    if os.path.exists(CACHE_FILE):
-        df = pd.read_csv(CACHE_FILE, low_memory=False)
-        logs.append("⚡ [Ingestion Agent] Loaded OWID dataset from local high-speed cache.")
-    else:
-        logs.append("🌐 [Ingestion Agent] Downloading live OWID dataset from GitHub repository...")
-        df = pd.read_csv(OWID_CSV_URL, low_memory=False)
-        df.to_csv(CACHE_FILE, index=False)
-        logs.append("💾 [Ingestion Agent] Cached dataset locally for future runs.")
 
-    # 2. Filter by Entity and Timeframe
-    available_cols = [c for c in REQUIRED_COLUMNS if c in df.columns]
-    entity_df = df[df["country"].str.lower() == entity.lower()][available_cols].copy()
-
-    if entity_df.empty:
+    try:
+        org_df, org_source, provenance, fac_count, missing_years = _load_and_aggregate_org_activity(
+            org_name, start_year, end_year, custom_path
+        )
+        logs.append(
+            f"🗄️ [Ingestion Agent] Aggregated {len(org_df)} annual records across {fac_count} facilities "
+            f"for '{org_name}' (Source: {org_source} | Provenance: {provenance})."
+        )
+    except Exception as e:
         return {
-            "raw_records": [],
-            "data_quality_notes": [f"Entity '{entity}' not found in OWID dataset."],
+            "org_activity_records": [],
+            "owid_benchmark_records": [],
+            "data_quality_report": {"error": str(e)},
             "ingestion_status": "FAILED",
-            "agent_logs": logs + [f"❌ [Ingestion Agent] Entity '{entity}' not found!"]
+            "agent_logs": logs + [f"❌ [Ingestion Agent] {e}"]
         }
 
-    entity_df = entity_df[(entity_df["year"] >= start_year) & (entity_df["year"] <= end_year)]
-    entity_df = entity_df.sort_values("year").reset_index(drop=True)
+    cache_status = "FRESH_DOWNLOAD"
+    df_owid = None
 
-    # 3. Automated Data Sanitization & Imputation
-    numeric_cols = [c for c in available_cols if c not in ["country", "iso_code", "year"]]
-    missing_before = int(entity_df[numeric_cols].isna().sum().sum())
+    if os.path.exists(OWID_CACHE_FILE):
+        cache_age = time.time() - os.path.getmtime(OWID_CACHE_FILE)
+        if cache_age < CACHE_TTL_SECONDS:
+            df_owid = pd.read_csv(OWID_CACHE_FILE, low_memory=False)
+            cache_status = f"VALID_CACHE (Age: {round(cache_age/3600, 2)}h)"
+            logs.append(f"⚡ [Ingestion Agent] Loaded OWID dataset from local cache ({cache_status}).")
 
-    if missing_before > 0:
-        # Linear interpolation for time-series continuity, then fill edges with 0
-        entity_df[numeric_cols] = entity_df[numeric_cols].interpolate(method="linear", limit_direction="both").fillna(0.0)
-        notes.append(f"Imputed {missing_before} missing data points using time-series linear interpolation.")
-        logs.append(f"🧹 [Ingestion Agent] Sanitized dataset: Imputed {missing_before} NaN values via time-series interpolation.")
-    else:
-        notes.append("Zero missing values detected in the selected window.")
+    if df_owid is None:
+        try:
+            df_owid = pd.read_csv(OWID_CSV_URL, low_memory=False)
+            df_owid.to_csv(OWID_CACHE_FILE, index=False)
+            logs.append("🌐 [Ingestion Agent] Refreshed OWID benchmark dataset from GitHub.")
+        except Exception as e:
+            if os.path.exists(OWID_CACHE_FILE):
+                df_owid = pd.read_csv(OWID_CACHE_FILE, low_memory=False)
+                cache_status = f"STALE_CACHE_FALLBACK ({str(e)[:40]})"
+                logs.append("⚠️ [Ingestion Agent] Live refresh failed; using local cached OWID file.")
+            else:
+                return {
+                    "org_activity_records": [],
+                    "owid_benchmark_records": [],
+                    "data_quality_report": {"error": str(e)},
+                    "ingestion_status": "FAILED",
+                    "agent_logs": logs + ["❌ [Ingestion Agent] OWID benchmark unavailable."]
+                }
 
-    records = entity_df.to_dict(orient="records")
-    logs.append(f"✅ [Ingestion Agent] Successfully extracted {len(records)} annual records.")
+    avail_cols = [c for c in OWID_COLS if c in df_owid.columns]
+    entity_owid = df_owid[df_owid["country"].str.lower() == entity.lower()][avail_cols].copy()
+
+    if entity_owid.empty:
+        return {
+            "org_activity_records": [],
+            "owid_benchmark_records": [],
+            "data_quality_report": {"error": f"Country '{entity}' not found in OWID."},
+            "ingestion_status": "FAILED",
+            "agent_logs": logs + [f"❌ [Ingestion Agent] Country '{entity}' not found in OWID."]
+        }
+
+    entity_owid = entity_owid[(entity_owid["year"] >= start_year) & (entity_owid["year"] <= end_year)].sort_values("year").reset_index(drop=True)
+    numeric_owid_cols = [c for c in avail_cols if c not in ["country", "iso_code", "year"]]
+    raw_owid_missing = int(entity_owid[numeric_owid_cols].isna().sum().sum())
+    org_missing = int(org_df[NUMERIC_ACTIVITY_COLS].isna().sum().sum())
+
+    quality_report = {
+        "organization_name": org_name,
+        "organization_data_source": org_source,
+        "data_provenance": provenance,
+        "is_simulated_data": provenance == "SIMULATED_DEMO",
+        "facilities_aggregated": fac_count,
+        "owid_cache_status": cache_status,
+        "org_annual_records": len(org_df),
+        "org_missing_years_in_range": missing_years,
+        "owid_annual_records": len(entity_owid),
+        "org_missing_values": org_missing,
+        "owid_missing_values_preserved": raw_owid_missing,
+        "zero_fill_applied": False
+    }
 
     return {
-        "raw_records": records,
-        "data_quality_notes": notes,
+        "org_activity_records": org_df.to_dict(orient="records"),
+        "owid_benchmark_records": entity_owid.to_dict(orient="records"),
+        "data_quality_report": quality_report,
         "ingestion_status": "SUCCESS",
         "agent_logs": logs
     }

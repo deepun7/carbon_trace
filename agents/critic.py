@@ -1,51 +1,63 @@
 from state import CarbonAgentState
 
 def critic_agent(state: CarbonAgentState) -> dict:
-    logs = state.get("agent_logs", [])
+    logs = list(state.get("agent_logs", []))
     report = state.get("draft_report", "")
     metrics = state.get("computed_metrics", {})
-    ml_metrics = state.get("ml_evaluation_metrics", {})
-    revision = state.get("revision_count", 1)
+    scopes = state.get("scope_breakdown", {})
 
-    logs.append("🔍 [Critic Agent] Auditing report for numerical grounding and ML metric verification...")
+    logs.append("🔍 [Critic Agent] Verifying report figures, scope totals, factor citations, and provenance labels...")
 
     issues = []
     checks_passed = 0
-    total_checks = 6
+    total_checks = 8
 
-    required_keywords = ["Executive Summary", "Scope", "Anomaly", "Decarbonization"]
+    required_keywords = ["Executive Summary", "Scope", "OWID", "Decarbonization"]
     for kw in required_keywords:
         if kw.lower() in report.lower():
             checks_passed += 1
         else:
-            issues.append(f"Missing section covering '{kw}'.")
+            issues.append(f"Missing required section covering '{kw}'.")
 
-    end_co2_str = str(metrics.get("end_co2_mt", ""))
-    net_change_str = str(metrics.get("net_change_pct", ""))
+    end_org_str = str(metrics.get("end_org_tco2e", ""))
+    org_change_str = str(metrics.get("org_net_change_pct", ""))
+    owid_end_str = str(metrics.get("owid_national_end_co2_mt", ""))
+    provenance_str = str(metrics.get("data_provenance", "SIMULATED_DEMO"))
 
-    if end_co2_str and end_co2_str in report:
+    if end_org_str and end_org_str in report:
         checks_passed += 1
     else:
-        issues.append(f"Exact latest CO2 value ({end_co2_str} Mt) missing.")
+        issues.append(f"Exact latest corporate footprint ({end_org_str} tCO2e) missing.")
 
-    if net_change_str and net_change_str in report:
+    if org_change_str and org_change_str in report:
         checks_passed += 1
     else:
-        issues.append(f"Exact net change ({net_change_str}%) missing.")
+        issues.append(f"Exact corporate net change ({org_change_str}%) missing.")
 
-    faithfulness = round((checks_passed / total_checks) * 100, 1)
+    if owid_end_str and owid_end_str in report:
+        checks_passed += 1
+    else:
+        issues.append(f"Exact OWID national benchmark ({owid_end_str} Mt) missing.")
 
-    if not issues or revision >= 2:
-        logs.append(f"✅ [Critic Agent] Audit PASSED! Grounding Faithfulness Score: {faithfulness}%.")
+    scope_vals_present = all(str(v) in report for v in scopes.values()) if scopes else False
+    if scope_vals_present and provenance_str in report:
+        checks_passed += 1
+    else:
+        issues.append("Missing exact Scope 1/2/3 values or data provenance label.")
+
+    faithfulness = round((checks_passed / total_checks) * 100.0, 1)
+
+    if len(issues) == 0:
+        logs.append(f"✅ [Critic Agent] Audit PASSED! All {total_checks}/{total_checks} checks verified (Completeness: {faithfulness}%).")
         return {
             "critic_approved": True,
-            "critic_feedback": f"Approved (Faithfulness: {faithfulness}%)",
+            "critic_feedback": f"Approved ({total_checks}/{total_checks} checks passed, Completeness: {faithfulness}%)",
             "faithfulness_score": faithfulness,
             "agent_logs": logs
         }
     else:
         feedback_msg = " | ".join(issues)
-        logs.append(f"⚠️ [Critic Agent] Audit REJECTED ({faithfulness}%): {feedback_msg}. Looping back...")
+        logs.append(f"❌ [Critic Agent] Audit REJECTED ({faithfulness}%): {feedback_msg}")
         return {
             "critic_approved": False,
             "critic_feedback": feedback_msg,
