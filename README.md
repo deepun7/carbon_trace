@@ -20,6 +20,17 @@ CarbonTrace is a 5-agent LangGraph prototype that automates organizational green
 
 ## CLI Usage, Testing & Periodic Scheduling
 
+## Mobile Dashboard
+
+Install the requirements and start the same-origin API plus the supplied responsive dashboard:
+
+```bash
+python -m pip install -r requirements.txt
+uvicorn server:app --reload
+```
+
+Open `http://127.0.0.1:8000`. The dashboard loads a matching saved run or runs the pipeline, and its refresh control can rerun for the selected organization, country, period, and optional activity CSV. The API also provides `/api/health`, `/api/organizations`, `/api/run`, and `/api/run-csv`. CSV uploads are validated by the existing ingestion agent and temporary upload files are removed after the run. The Streamlit dashboard remains available separately with `streamlit run app.py`.
+
 ```bash
 # 1. Initialize or safely migrate the SQLite demo database & factor registry
 python seed_enterprise_db.py

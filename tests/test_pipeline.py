@@ -1,15 +1,57 @@
+import os
 import sqlite3
 import pandas as pd
 import pytest
+from fastapi.testclient import TestClient
 import seed_enterprise_db
 import agents.ingestion as ing_mod
 import main as main_mod
+import server as server_mod
 from agents.ingestion import ingestion_agent
 from agents.calculation import calculation_agent
 from agents.ml_engine import ml_engine_agent
 from agents.reporting import reporting_agent
 from agents.critic import critic_agent
 from main import log_run_to_ledger, load_matching_persisted_run, validate_cli_parameters, init_run_ledger
+
+def _dashboard_state():
+    return {
+        "org_name": "Apex Manufacturing Pvt Ltd",
+        "target_entity": "India",
+        "start_year": 2020,
+        "end_year": 2023,
+        "ingestion_status": "SUCCESS",
+        "computed_metrics": {
+            "org_name": "Apex Manufacturing Pvt Ltd",
+            "benchmark_country": "India",
+            "start_year": 2020,
+            "end_year": 2023,
+            "data_provenance": "SIMULATED_DEMO",
+            "end_org_tco2e": 4215.63,
+            "org_net_change_pct": 8.45,
+            "owid_national_end_co2_mt": 3062.756,
+        },
+        "ml_evaluation_metrics": {
+            "rmse_tco2e": 35.2,
+            "baseline_naive_rmse_tco2e": 40.1,
+            "rmse_skill_over_naive_pct": 12.22,
+            "worse_than_baseline": False,
+            "consensus_f1_score": 0.75,
+            "walk_forward_folds": 2,
+            "forecast_horizon_label": "2024–2030",
+            "status": "COMPLETED",
+        },
+        "scope_breakdown": {"Scope 1": 1000.0, "Scope 2": 2000.0, "Scope 3": 1215.63},
+        "annual_emissions_records": [{"year": 2023, "total_org_tco2e": 4215.63}],
+        "forecast_records": [{"year": 2024, "predicted_org_tco2e": 4300.0}],
+        "anomalies_detected": [],
+        "draft_report": "CarbonTrace test report",
+        "data_quality_report": {"data_provenance": "SIMULATED_DEMO"},
+        "agent_logs": ["test run"],
+        "critic_approved": True,
+        "faithfulness_score": 100.0,
+        "_last_run_timestamp_utc": "2026-11-04 12:00:00 UTC",
+    }
 
 @pytest.fixture(autouse=True)
 def isolated_test_environment(tmp_path, monkeypatch):
@@ -157,3 +199,68 @@ def test_6_non_destructive_ledger_migration_and_scheduler_validation():
         validate_cli_parameters(2000, 2023, interval_minutes=0)
     with pytest.raises(ValueError):
         validate_cli_parameters(2023, 2000, interval_minutes=60)
+
+
+def test_7_frontend_api_uses_pipeline_state(monkeypatch):
+    state = _dashboard_state()
+    run_args = {}
+
+    def fake_run_pipeline(**kwargs):
+        run_args.update(kwargs)
+        return state
+
+    monkeypatch.setattr(server_mod, "run_pipeline", fake_run_pipeline)
+    client = TestClient(server_mod.app)
+
+    page = client.get("/")
+    assert page.status_code == 200
+    assert "CARBON TRACE" in page.text
+    assert client.get("/api/health").json()["status"] == "ok"
+
+    latest = client.get("/api/run", params={
+        "org_name": "Apex Manufacturing Pvt Ltd",
+        "country": "India",
+        "start_year": 2020,
+        "end_year": 2023,
+    })
+    assert latest.status_code == 200
+    assert latest.json()["metrics"]["end_org_tco2e"] == 4215.63
+
+    response = client.post("/api/run", json={
+        "org_name": "Apex Manufacturing Pvt Ltd",
+        "country": "India",
+        "start_year": 2020,
+        "end_year": 2023,
+    })
+    assert response.status_code == 200
+    assert response.json()["metrics"]["end_org_tco2e"] == 4215.63
+    assert response.json()["history"][0]["year"] == 2023
+    assert run_args["org_name"] == "Apex Manufacturing Pvt Ltd"
+    assert run_args["start_year"] == 2020
+
+
+def test_8_csv_api_passes_temporary_upload_to_pipeline(monkeypatch):
+    state = _dashboard_state()
+    upload_info = {}
+
+    def fake_run_pipeline(**kwargs):
+        path = kwargs["data_source_path"]
+        upload_info["exists_during_run"] = os.path.exists(path)
+        with open(path, "rb") as csv_file:
+            upload_info["body"] = csv_file.read()
+        upload_info["path"] = path
+        return state
+
+    monkeypatch.setattr(server_mod, "run_pipeline", fake_run_pipeline)
+    client = TestClient(server_mod.app)
+    csv_bytes = b"year,stationary_diesel_liters\n2023,100"
+    response = client.post(
+        "/api/run-csv?org_name=Apex%20Manufacturing%20Pvt%20Ltd&country=India&start_year=2023&end_year=2023",
+        content=csv_bytes,
+        headers={"Content-Type": "text/csv"},
+    )
+
+    assert response.status_code == 200
+    assert upload_info["exists_during_run"] is True
+    assert upload_info["body"] == csv_bytes
+    assert not os.path.exists(upload_info["path"])

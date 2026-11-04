@@ -129,10 +129,10 @@ def _load_and_aggregate_org_activity(
     expected_years = set(range(int(start_year), int(end_year) + 1))
     missing_years = sorted(list(expected_years - observed_years))
     if len(agg_df) > 1:
-    full_span = set(range(int(agg_df["year"].min()), int(agg_df["year"].max()) + 1))
-    gaps = sorted(list(full_span - observed_years))
-    if gaps:
-        raise ValueError(f"Contiguous annual data required for YoY/walk-forward ML; missing years: {gaps}")
+        full_span = set(range(int(agg_df["year"].min()), int(agg_df["year"].max()) + 1))
+        gaps = sorted(list(full_span - observed_years))
+        if gaps:
+            raise ValueError(f"Contiguous annual data required for YoY/walk-forward ML; missing years: {gaps}")
 
     return agg_df, source_label, provenance, facility_count, missing_years
 
