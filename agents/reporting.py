@@ -23,6 +23,35 @@ def compile_deterministic_verified_report(state: CarbonAgentState, llm_summary: 
     s1_val = list(s.values())[0] if len(s) > 0 else 0.0
     s2_val = list(s.values())[1] if len(s) > 1 else 0.0
     s3_val = list(s.values())[2] if len(s) > 2 else 0.0
+    cin_number = m.get("cin_number") or "Not available"
+    bse_code = m.get("bse_code") or "Not available"
+    nse_symbol = m.get("nse_symbol") or "Not available"
+    filing_section = m.get("filing_section") or "Not available"
+    brsr_provenance = m.get("brsr_data_provenance") or "Not available"
+    reported_scope_1 = m.get("reported_scope_1_tco2e")
+    reported_scope_2 = m.get("reported_scope_2_tco2e")
+    reported_scope_3 = m.get("reported_scope_3_tco2e")
+    energy_value = m.get("energy_consumption_value")
+    energy_report = (
+        f"{energy_value} {m.get('energy_consumption_unit')} "
+        f"({m.get('energy_consumption_kwh')} kWh)"
+        if energy_value is not None else "Not present in the registry or uploaded filing"
+    )
+    scope_1_reconciliation = (
+        f"{reported_scope_1} tCO2e; activity-based variance: "
+        f"{m.get('scope_1_reconciliation_variance_tco2e')} tCO2e"
+        if reported_scope_1 is not None else "Not reported; reconciliation unavailable"
+    )
+    scope_2_reconciliation = (
+        f"{reported_scope_2} tCO2e; activity-based variance: "
+        f"{m.get('scope_2_reconciliation_variance_tco2e')} tCO2e"
+        if reported_scope_2 is not None else "Not reported; reconciliation unavailable"
+    )
+    scope_3_reconciliation = (
+        f"{reported_scope_3} tCO2e; activity-based variance: "
+        f"{m.get('scope_3_reconciliation_variance_tco2e')} tCO2e"
+        if reported_scope_3 is not None else "Not reported / optional"
+    )
 
     anom_rows = "\n".join(
         [f"| {a['year']} | {a['org_tco2e']} tCO2e | {a['org_yoy_pct']}% | {a['z_score']} | {a['type']} |" for a in anoms]
@@ -77,10 +106,26 @@ Facility-level operational inputs were aggregated by `(org_id, year)` and conver
   - *Business Air Travel:* `{ef.get('business_flight', {}).get('value')} kg CO2e/pkm` — {ef.get('business_flight', {}).get('source')}
   - *HGV Road Freight:* `{ef.get('road_freight', {}).get('value')} kg CO2e/ton-km` — {ef.get('road_freight', {}).get('source')}
 
-## 3. National Benchmarking Against OWID Macro Telemetry
+## 3. MCA CIN Registry & BRSR Principle 6 Provenance
+- **Company:** {m.get('org_name')}
+- **MCA CIN:** {cin_number}
+- **BSE Code:** {bse_code}
+- **NSE Symbol:** {nse_symbol}
+- **Filing section:** {filing_section}
+- **BRSR metadata provenance:** {brsr_provenance}
+- **BRSR source:** {m.get('brsr_source') or 'Not available'}
+- **Operational activity provenance:** {provenance} (generated demo activity is not a reported BRSR value)
+- **Document format & extraction engine:** {m.get('document_format', 'NATIVE_DIGITAL_TEXT')} ({m.get('pages_scanned', 1)} pages, {m.get('extraction_engine', 'pdfplumber+pypdf')})
+- **Reported energy consumption:** {energy_report}
+- **Reported Scope 1 (BRSR):** {scope_1_reconciliation}
+- **Reported Scope 2 (BRSR):** {scope_2_reconciliation}
+- **Reported Scope 3 (BRSR):** {scope_3_reconciliation}
+- **Total Extracted Footprint:** {m.get('total_extracted_footprint_tco2e')} tCO2e
+
+## 4. National Benchmarking Against OWID Macro Telemetry
 National territorial emissions for **{m.get('benchmark_country')}** from the Our World in Data (OWID) dataset reached **{m.get('owid_national_end_co2_mt')} Mt CO2** with a national CAGR of **{m.get('owid_national_cagr_pct')}%**. Organizational estimates (`tCO2e`) are maintained strictly separate from national macro totals (`Mt CO2`).
 
-## 4. Walk-Forward Forecast ({horizon_label}) vs Baseline & Anomaly Method Agreement
+## 5. Walk-Forward Forecast ({horizon_label}) vs Baseline & Anomaly Method Agreement
 {ml_section}
 
 ### Detected Statistical Volatility Outliers (`|Z| >= 1.65`)
@@ -94,7 +139,7 @@ National territorial emissions for **{m.get('benchmark_country')}** from the Our
 | :--- | :--- | :--- |
 {fc_rows}
 
-## 5. Automated Decarbonization Roadmap & Scope Abatement Actions
+## 6. Automated Decarbonization Roadmap & Scope Abatement Actions
 1. **Scope 2 Renewable Electricity Procurement:** Transitioning purchased facility electricity (`{s2_val} tCO2e`) to renewable PPAs reduces location-based grid exposure (`{m.get('grid_ef_kg_per_kwh')} kg CO2e/kWh`).
 2. **Scope 1 Thermal & Fleet Decarbonization:** Electrifying diesel commercial fleets and upgrading stationary combustion units across all **{fac_count} facilities**.
 3. **Scope 3 Freight & Aviation Optimization:** Shifting HGV road freight (`0.10455 kg CO2e/ton-km`) to rail corridors and prioritizing virtual collaboration.

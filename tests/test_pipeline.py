@@ -7,6 +7,8 @@ import seed_enterprise_db
 import agents.ingestion as ing_mod
 import main as main_mod
 import server as server_mod
+import agents.brsr_extractor as brsr_mod
+from agents.brsr_extractor import extract_brsr_principle_6_text, lookup_cin_metadata, validate_cin
 from agents.ingestion import ingestion_agent
 from agents.calculation import calculation_agent
 from agents.ml_engine import ml_engine_agent
@@ -27,6 +29,11 @@ def _dashboard_state():
             "start_year": 2020,
             "end_year": 2023,
             "data_provenance": "SIMULATED_DEMO",
+            "cin_number": "L17110MH1973PLC019786",
+            "bse_code": "500325",
+            "nse_symbol": "RELIANCE",
+            "filing_section": "Section E: Principle 6",
+            "brsr_data_provenance": "VERIFIED_BRSR_FILING",
             "end_org_tco2e": 4215.63,
             "org_net_change_pct": 8.45,
             "owid_national_end_co2_mt": 3062.756,
@@ -225,6 +232,15 @@ def test_7_frontend_api_uses_pipeline_state(monkeypatch):
     })
     assert latest.status_code == 200
     assert latest.json()["metrics"]["end_org_tco2e"] == 4215.63
+    assert latest.json()["corporate"]["cin_number"] == "L17110MH1973PLC019786"
+    assert latest.json()["corporate"]["bse_code"] == "500325"
+    assert latest.json()["corporate"]["nse_symbol"] == "RELIANCE"
+    assert latest.json()["corporate"]["filing_section"] == "Section E: Principle 6"
+
+    organizations = client.get("/api/organizations").json()["organizations"]
+    assert "Reliance Industries Limited" in organizations
+    assert "NTPC Limited" in organizations
+    assert "Tata Steel Limited" in organizations
 
     response = client.post("/api/run", json={
         "org_name": "Apex Manufacturing Pvt Ltd",
@@ -264,3 +280,318 @@ def test_8_csv_api_passes_temporary_upload_to_pipeline(monkeypatch):
     assert upload_info["exists_during_run"] is True
     assert upload_info["body"] == csv_bytes
     assert not os.path.exists(upload_info["path"])
+
+
+@pytest.mark.parametrize(
+    ("company", "cin", "bse", "nse", "section"),
+    [
+        ("ITC Limited", "L16005WB1910PLC001985", "500875", "ITC", "Section C: Principle 6"),
+        ("Reliance Industries Limited", "L17110MH1973PLC019786", "500325", "RELIANCE", "Section E: Principle 6"),
+        ("NTPC Limited", "L40101DL1975GOI007966", "532555", "NTPC", "Section E: Principle 6"),
+        ("Tata Steel Limited", "L27100MH1907PLC000260", "500470", "TATASTEEL", "Section E: Principle 6"),
+    ],
+)
+def test_cin_registry_lookup(company, cin, bse, nse, section):
+    metadata = lookup_cin_metadata(cin)
+    assert metadata["org_name"] == company
+    assert metadata["bse_code"] == bse
+    assert metadata["nse_symbol"] == nse
+    assert metadata["data_provenance"] == "VERIFIED_BRSR_FILING"
+    assert metadata["filing_section"] == section
+
+
+def test_cin_validation_rejects_malformed_identifiers():
+    assert validate_cin("l17110mh1973plc019786") == "L17110MH1973PLC019786"
+    with pytest.raises(ValueError, match="21-character"):
+        validate_cin("L17110MH1973PLC01978")
+
+
+def test_brsr_principle_6_text_and_pdf_extraction(monkeypatch):
+    filing_text = """
+    Section E: Principle 6
+    Energy consumption (GJ) 1,000
+    Scope 1 emissions (tCO2e) 123.45
+    Scope 2 emissions (tCO2e) 67.89
+    Section E: Principle 7
+    Scope 1 emissions (tCO2e) 999
+    """
+    extracted = extract_brsr_principle_6_text(filing_text)
+    assert extracted["filing_section"] == "Section E: Principle 6"
+    assert extracted["energy_consumption_unit"] == "GJ"
+    assert extracted["energy_consumption_kwh"] == 277778.0
+    assert extracted["reported_scope_1_tco2e"] == 123.45
+    assert extracted["reported_scope_2_tco2e"] == 67.89
+
+    class FakePage:
+        def extract_text(self):
+            return filing_text
+
+    class FakeReader:
+        def __init__(self, _source):
+            self.pages = [FakePage()]
+
+    monkeypatch.setattr(brsr_mod, "PdfReader", FakeReader)
+    pdf_extracted = brsr_mod.extract_brsr_pdf(b"%PDF-test")
+    assert pdf_extracted["reported_scope_1_tco2e"] == 123.45
+    assert pdf_extracted["reported_scope_2_tco2e"] == 67.89
+
+
+def test_brsr_upload_api_passes_temporary_pdf_to_pipeline(monkeypatch):
+    pipeline_state = _dashboard_state()
+    upload_info = {}
+
+    def fake_run_pipeline(**kwargs):
+        path = kwargs["brsr_pdf_path"]
+        upload_info["exists_during_run"] = os.path.exists(path)
+        with open(path, "rb") as pdf_file:
+            upload_info["body"] = pdf_file.read()
+        return pipeline_state
+
+    monkeypatch.setattr(server_mod, "run_pipeline", fake_run_pipeline)
+    client = TestClient(server_mod.app)
+    pdf_bytes = b"%PDF-1.4 test"
+    response = client.post(
+        "/api/run-brsr?org_name=Reliance%20Industries%20Limited&country=India&start_year=2020&end_year=2023",
+        content=pdf_bytes,
+        headers={"Content-Type": "application/pdf"},
+    )
+
+    assert response.status_code == 200
+    assert upload_info["exists_during_run"] is True
+    assert upload_info["body"] == pdf_bytes
+
+
+def test_brsr_section_c_principle_6_text_extraction():
+    filing_text = """
+    Section C: Principle 6
+    Total energy consumption (kWh) 50,000
+    Scope 1 emissions (tCO2e) 450.25
+    Scope 2 emissions (tCO2e) 820.75
+    Section C: Principle 7
+    Scope 1 emissions (tCO2e) 100
+    """
+    extracted = extract_brsr_principle_6_text(filing_text)
+    assert extracted["filing_section"] == "Section C: Principle 6"
+    assert extracted["energy_consumption_unit"] == "KWH"
+    assert extracted["energy_consumption_kwh"] == 50000.0
+    assert extracted["reported_scope_1_tco2e"] == 450.25
+    assert extracted["reported_scope_2_tco2e"] == 820.75
+
+
+def test_simulated_demo_orgs_unregistered():
+    from agents.brsr_extractor import resolve_company_metadata
+    assert resolve_company_metadata("Apex Manufacturing Pvt Ltd") is None
+    assert resolve_company_metadata("GreenGrid Logistics Corp") is None
+
+
+def test_cin_regex_validation():
+    # Valid listed and unlisted Indian Corporate Identity Numbers
+    valid_cins = [
+        "L17110MH1973PLC019786",  # Reliance
+        "L40101DL1975GOI007966",  # NTPC
+        "L27100MH1907PLC000260",  # Tata Steel
+        "u72200ka1999ptc025688",  # Lowercase unlisted private company
+        "U74999DL2018PTC333333",  # Unlisted
+    ]
+    for cin in valid_cins:
+        validated = validate_cin(cin)
+        assert len(validated) == 21
+        assert validated == cin.upper()
+
+    # Invalid CINs
+    invalid_cins = [
+        "L17110MH1973PLC01978",   # 20 chars (too short)
+        "L17110MH1973PLC0197866", # 22 chars (too long)
+        "X17110MH1973PLC019786",  # Invalid prefix (must start with L or U)
+        "123456789012345678901",  # All digits
+        "",                       # Empty
+        None,                     # None
+    ]
+    for inv in invalid_cins:
+        with pytest.raises(ValueError):
+            validate_cin(inv)
+
+
+def test_brsr_digital_pdf_extraction():
+    sample_pdf = os.path.join("data", "sample_reliance_brsr_p6.pdf")
+    assert os.path.exists(sample_pdf), "Sample reliance BRSR PDF fixture must exist"
+
+    extracted = brsr_mod.extract_brsr_pdf(sample_pdf)
+    assert extracted["document_format"] == "NATIVE_DIGITAL_TEXT"
+    assert extracted["extraction_engine"] == "pdfplumber+pypdf"
+    assert extracted["pages_scanned"] >= 1
+    assert extracted["cin_number"] == "L17110MH1973PLC019786"
+    assert "Reliance" in extracted["company_name"]
+    assert extracted["reported_scope_1_tco2e"] == 27650000.0
+    assert extracted["reported_scope_2_tco2e"] == 9420000.0
+    assert extracted["total_extracted_footprint_tco2e"] == 37070000.0
+    assert extracted["energy_consumption_gj"] == 1125000000.0
+    assert extracted["energy_consumption_kwh"] == 312500250000.0
+    assert len(extracted["disclosures_matrix"]) >= 3
+    assert any(d["parameter"] == "Scope 1 Direct GHG Emissions" for d in extracted["disclosures_matrix"])
+    assert any(d["parameter"] == "Total Operational Energy Consumption" for d in extracted["disclosures_matrix"])
+
+
+def test_brsr_scanned_ocr_fallback(monkeypatch):
+    """Test that low character count (<150 chars/page) routes to SCANNED_IMAGE_OCR."""
+    ocr_result_text = """
+    Business Responsibility and Sustainability Report
+    Name of the Company: Bharat Heavy Electricals Limited
+    CIN: L74899DL1964GOI004281
+    Section C: Principle 6
+    Essential Indicator 1: Total energy consumed (GJ) 450,000
+    Essential Indicator 7:
+    Scope 1 emissions (tCO2e) 85,200.5
+    Scope 2 emissions (tCO2e) 42,100.0
+    Scope 3 emissions (tCO2e) 12,300.0
+    Section C: Principle 7
+    """
+
+    class LowCharPage:
+        def extract_text(self):
+            return "Scan P1"  # Only 7 chars (< 150 chars/page)
+        def extract_tables(self):
+            return []
+
+    class MockPdfPlumber:
+        def __init__(self, _stream):
+            self.pages = [LowCharPage()]
+        def __enter__(self):
+            return self
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    monkeypatch.setattr(brsr_mod.pdfplumber, "open", MockPdfPlumber)
+    monkeypatch.setattr(brsr_mod, "_run_ocr_on_pdf_bytes", lambda b: (ocr_result_text, []))
+
+    extracted = brsr_mod.extract_brsr_pdf(b"%PDF-1.4 scanned mock")
+    assert extracted["document_format"] == "SCANNED_IMAGE_OCR"
+    assert "ocr" in extracted["extraction_engine"]
+    assert extracted["cin_number"] == "L74899DL1964GOI004281"
+    assert extracted["reported_scope_1_tco2e"] == 85200.5
+    assert extracted["reported_scope_2_tco2e"] == 42100.0
+    assert extracted["reported_scope_3_tco2e"] == 12300.0
+    assert extracted["energy_consumption_gj"] == 450000.0
+    assert extracted["total_extracted_footprint_tco2e"] == 139600.5
+
+
+def test_brsr_end_to_end_pipeline_with_uploaded_pdf():
+    from main import run_pipeline
+    sample_pdf = os.path.join("data", "sample_reliance_brsr_p6.pdf")
+    state = run_pipeline(
+        org_name="Reliance Industries Limited",
+        entity="India",
+        start_year=2018,
+        end_year=2023,
+        brsr_pdf_path=sample_pdf
+    )
+    assert state["ingestion_status"] == "SUCCESS"
+    assert state["critic_approved"] is True
+    metrics = state["computed_metrics"]
+    assert metrics["document_format"] == "NATIVE_DIGITAL_TEXT"
+    assert metrics["reported_scope_1_tco2e"] == 27650000.0
+    assert metrics["reported_scope_2_tco2e"] == 9420000.0
+    assert metrics["total_extracted_footprint_tco2e"] == 37070000.0
+    assert len(metrics["disclosures_matrix"]) >= 3
+
+
+def test_itc_brsr_pdf_comprehensive_extraction():
+    itc_pdf = os.path.join("data", "itc-r-and-a-brsr-2026.pdf")
+    if not os.path.exists(itc_pdf):
+        pytest.skip("ITC BRSR PDF file not present")
+
+    extracted = brsr_mod.extract_brsr_pdf(itc_pdf)
+    assert extracted["cin_number"] == "L16005WB1910PLC001985"
+    assert "ITC" in extracted["company_name"]
+    assert extracted["financial_year"] == "FY 2025-26"
+    assert extracted["previous_financial_year"] == "FY 2024-25"
+    assert "KPMG" in extracted["assurance_provider"]
+
+    # Principle 6 Scope 1, 2, 3 figures
+    assert extracted["reported_scope_1_tco2e"] == 1045000.0
+    assert extracted["reported_scope_1_ktco2e"] == 1045.0
+    assert extracted["reported_scope_2_tco2e"] == 170000.0
+    assert extracted["scope_2_location_tco2e"] == 170000.0
+    assert extracted["scope_2_market_tco2e"] == 151000.0
+    assert extracted["reported_scope_3_tco2e"] == 1442000.0
+    assert extracted["reported_scope_3_ktco2e"] == 1442.0
+
+    # Principle 6 Energy figures
+    assert extracted["energy_consumption_value"] == 24025.0
+    assert extracted["energy_consumption_unit"] == "TJ"
+    assert extracted["renewable_energy_tj"] == 12334.0
+    assert extracted["non_renewable_energy_tj"] == 11691.0
+    assert extracted["renewable_electricity_tj"] == 964.0
+    assert extracted["renewable_fuel_tj"] == 11182.0
+    assert extracted["non_renewable_electricity_tj"] == 761.0
+    assert extracted["non_renewable_fuel_tj"] == 10930.0
+
+    # Previous FY comparison data
+    prev = extracted["previous_fy_data"]
+    assert prev["financial_year"] == "FY 2024-25"
+    assert prev["reported_scope_1_tco2e"] == 1101000.0
+    assert prev["reported_scope_2_tco2e"] == 153000.0
+    assert prev["reported_scope_3_tco2e"] == 1062000.0
+    assert prev["total_energy_value"] == 25791.0
+    assert prev["renewable_energy_tj"] == 13434.0
+    assert prev["non_renewable_energy_tj"] == 12357.0
+
+
+def test_api_endpoints_companies_and_uploads(monkeypatch):
+    import api as api_mod
+    client = TestClient(api_mod.app)
+
+    # 1. Test /api/companies
+    resp = client.get("/api/companies")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "ITC Limited" in data["companies"]
+    assert any(c["cin_number"] == "L16005WB1910PLC001985" for c in data["registry"])
+
+    # 2. Test /api/upload-csv endpoint
+    csv_payload = b"year,stationary_diesel_liters\n2022,250"
+    upload_info = {}
+
+    def fake_run(**kwargs):
+        upload_info.update(kwargs)
+        return _dashboard_state()
+
+    monkeypatch.setattr(server_mod, "run_pipeline", fake_run)
+    csv_resp = client.post(
+        "/api/upload-csv?org_name=Apex%20Manufacturing%20Pvt%20Ltd&country=India&start_year=2020&end_year=2023",
+        content=csv_payload,
+        headers={"Content-Type": "text/csv"}
+    )
+    assert csv_resp.status_code == 200
+    assert upload_info.get("data_source_path") is not None
+
+    # 3. Test /api/upload-brsr-pdf endpoint
+    pdf_resp = client.post(
+        "/api/upload-brsr-pdf?org_name=ITC%20Limited&country=India&start_year=2020&end_year=2025",
+        content=b"%PDF-1.4 test mock",
+        headers={"Content-Type": "application/pdf"}
+    )
+    assert pdf_resp.status_code == 200
+    assert "corporate" in pdf_resp.json()
+
+
+def test_itc_end_to_end_pipeline_run():
+    from main import run_pipeline
+    state = run_pipeline(
+        org_name="ITC Limited",
+        entity="India",
+        start_year=2015,
+        end_year=2025
+    )
+    assert state["ingestion_status"] == "SUCCESS"
+    assert state["critic_approved"] is True
+    metrics = state["computed_metrics"]
+    assert metrics["cin_number"] == "L16005WB1910PLC001985"
+    assert metrics["bse_code"] == "500875"
+    assert metrics["nse_symbol"] == "ITC"
+    assert metrics["reported_scope_1_tco2e"] == 1045000.0
+    assert metrics["reported_scope_2_tco2e"] == 170000.0
+    assert metrics["reported_scope_3_tco2e"] == 1442000.0
+    assert metrics["energy_consumption_value"] == 24025.0
+    assert len(state["annual_emissions_records"]) >= 10
+    assert len(state["forecast_records"]) >= 5

@@ -1,881 +1,580 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CarbonTrace ✦ Indian Corporate Regulatory Carbon Intelligence</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
-<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#19120c;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-secondary-container": "#ffdec6", "background": "#19120c", "surface-dim": "#19120c", "on-primary-fixed-variant": "#564419", "secondary-fixed": "#ffdcc2", "surface-variant": "#3c332c", "on-primary-fixed": "#251a00", "secondary": "#ffb77b", "surface-tint": "#dec48c", "error-container": "#93000a", "tertiary": "#fff6f2", "on-surface-variant": "#cfc5b6", "secondary-fixed-dim": "#ffb77b", "surface-bright": "#403830", "outline": "#989082", "outline-variant": "#4c463b", "surface-container-high": "#312822", "tertiary-fixed-dim": "#dfc1a7", "on-primary-container": "#715e30", "on-surface": "#efe0d5", "primary-fixed-dim": "#dec48c", "tertiary-fixed": "#fcddc2", "inverse-surface": "#efe0d5", "tertiary-container": "#f5d6bb", "primary-fixed": "#fbe0a6", "inverse-on-surface": "#372f28", "on-tertiary-fixed": "#281808", "secondary-container": "#995402", "surface-container-lowest": "#130d07", "on-secondary-fixed": "#2e1500", "on-primary": "#3e2e04", "primary-container": "#f4d9a0", "on-secondary-fixed-variant": "#6d3a00", "on-tertiary-container": "#735c46", "on-background": "#efe0d5", "primary": "#fff7ee", "on-tertiary": "#3f2d1a", "surface-container-highest": "#3c332c", "on-secondary": "#4c2700", "error": "#ffb4ab", "surface-container": "#261e18", "surface-container-low": "#211a14", "on-tertiary-fixed-variant": "#57432f", "surface": "#19120c", "on-error": "#690005", "on-error-container": "#ffdad6", "inverse-primary": "#6f5c2e" }, "borderRadius": { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, "spacing": { "space-lg": "1.75rem", "margin": "3rem", "space-xl": "3rem", "gutter-mobile": "0.75rem", "gutter": "1.5rem", "margin-mobile": "1.25rem", "space-sm": "0.5rem", "space-md": "1rem", "space-xs": "0.25rem" }, "fontFamily": { "display-lg": ["Playfair Display"], "label-nav": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "display-lg-mobile": ["Playfair Display"], "body-sm": ["Plus Jakarta Sans"], "headline-lg": ["Playfair Display"], "data-mono": ["Plus Jakarta Sans"], "kpi-stat": ["Playfair Display"], "headline-sm": ["Playfair Display"], "display-md": ["Playfair Display"], "subhead-uppercase": ["Plus Jakarta Sans"] }, "fontSize": { "display-lg": ["56px", { "lineHeight": "64px", "letterSpacing": "0.08em", "fontWeight": "400" }], "label-nav": ["10px", { "lineHeight": "14px", "letterSpacing": "0.28em", "fontWeight": "600" }], "body-lg": ["15px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "300" }], "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "0.06em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "0.04em", "fontWeight": "500" }], "data-mono": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500" }], "kpi-stat": ["48px", { "lineHeight": "52px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "headline-sm": ["22px", { "lineHeight": "30px", "letterSpacing": "0.03em", "fontWeight": "400" }], "display-md": ["40px", { "lineHeight": "48px", "letterSpacing": "0.06em", "fontWeight": "400" }], "subhead-uppercase": ["11px", { "lineHeight": "16px", "letterSpacing": "0.25em", "fontWeight": "600" }] } } } };</script><style>
-    body {
-      min-height: max(884px, 100dvh);
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/styles.css" />
+
+  <!-- Plotly.js & Marked.js -->
+  <script src="/plotly.min.js"></script>
+  <script>
+    if (typeof Plotly === "undefined") {
+      document.write('<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"><\/script>');
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- LEFT SIDEBAR: ATELIER TELEMETRY CONTROLS -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-badge">
+          <span class="material-symbols-outlined" style="font-size:12px;">verified</span>
+          <span>MCA & SEBI BRSR COMPLIANT</span>
+        </div>
+        <div class="brand-title">
+          <span>CARBON TRACE</span>
+          <span class="sparkle">✦</span>
+        </div>
+        <div class="brand-sub">Indian Corporate Regulatory Carbon Engine</div>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Organization Selector -->
+        <div class="control-group">
+          <label class="control-label" for="orgSelect">
+            <span>Target Corporation</span>
+            <span id="metaProvenance" class="badge-verified">VERIFIED_BRSR</span>
+          </label>
+          <div class="select-wrapper">
+            <select id="orgSelect" class="select-custom">
+              <option value="ITC Limited" selected>ITC Limited (VERIFIED_BRSR)</option>
+              <option value="Reliance Industries Limited">Reliance Industries Limited (VERIFIED_BRSR)</option>
+              <option value="NTPC Limited">NTPC Limited (VERIFIED_BRSR)</option>
+              <option value="Tata Steel Limited">Tata Steel Limited (VERIFIED_BRSR)</option>
+              <option value="Apex Manufacturing Pvt Ltd">Apex Manufacturing Pvt Ltd (SIMULATED_DEMO)</option>
+              <option value="GreenGrid Logistics Corp">GreenGrid Logistics Corp (SIMULATED_DEMO)</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">expand_more</span>
+          </div>
+
+          <!-- Dynamic Corporate Identity Metadata Card -->
+          <div class="corporate-meta-card">
+            <div class="row">
+              <span>MCA CIN (21-Char):</span>
+              <span id="metaCin" class="highlight">L16005WB1910PLC001985</span>
+            </div>
+            <div class="row">
+              <span>BSE / NSE:</span>
+              <span id="metaBse" class="highlight">BSE: 500875</span>
+              <span id="metaNse" class="highlight">NSE: ITC</span>
+            </div>
+            <div class="row">
+              <span>Assurance:</span>
+              <span id="metaAssurance" style="color:var(--success-emerald);font-size:10px;">KPMG ISAE 3000</span>
+            </div>
+            <div class="row">
+              <span>Filing Mandate:</span>
+              <span style="color:var(--gold-dim);">Section C: Principle 6</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OWID Country Selector -->
+        <div class="control-group">
+          <label class="control-label" for="countrySelect">
+            <span>Territory & Protocol Matrix</span>
+            <span style="color:var(--amber-light);font-size:9px;">OWID</span>
+          </label>
+          <div class="select-wrapper">
+            <select id="countrySelect" class="select-custom">
+              <option value="India" selected>India (OWID Benchmark)</option>
+              <option value="United States">United States</option>
+              <option value="China">China</option>
+              <option value="European Union (27)">European Union (27)</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Germany">Germany</option>
+              <option value="Japan">Japan</option>
+              <option value="World">World (Global Aggregate)</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">public</span>
+          </div>
+        </div>
+
+        <!-- Reporting Period Sliders -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Reporting Period</span>
+            <span id="yearRangeLabel" style="color:var(--gold-light);">2000 — 2025 (26Y)</span>
+          </div>
+          <div class="range-slider-container">
+            <div class="range-inputs">
+              <input id="startYearInput" class="range-input" type="number" min="1990" max="2025" value="2000" readonly />
+              <span style="color:var(--text-dim);font-family:var(--font-mono);">⟶</span>
+              <input id="endYearInput" class="range-input" type="number" min="1990" max="2025" value="2025" readonly />
+            </div>
+            <input id="startYearSlider" class="slider-dual" type="range" min="1990" max="2024" value="2000" />
+            <input id="endYearSlider" class="slider-dual" type="range" min="1991" max="2025" value="2025" />
+            <div class="range-chips">
+              <button class="chip-btn" data-start="2000" data-end="2010">2000–10</button>
+              <button class="chip-btn" data-start="2010" data-end="2020">2010–20</button>
+              <button class="chip-btn" data-start="2015" data-end="2025">2015–25</button>
+              <button class="chip-btn" data-start="2000" data-end="2025">Full 26Y</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Universal BRSR PDF Extractor Dropzone -->
+        <div class="control-group">
+          <label class="control-label">
+            <span>Universal BRSR PDF Extractor</span>
+            <span style="color:var(--success-emerald);font-size:9px;">OCR AUTO</span>
+          </label>
+          <div id="pdfDropzone" class="dropzone">
+            <input id="pdfInput" type="file" accept=".pdf" style="display:none;" />
+            <div class="icon-wrap">
+              <span class="material-symbols-outlined">picture_as_pdf</span>
+            </div>
+            <div class="dz-title">DROP SEBI BRSR ANNUAL PDF</div>
+            <div class="dz-desc">Any Listed Company &bull; Digital Text or Scanned Image &bull; Max 64 MB</div>
+            <div id="pdfStatus"></div>
+          </div>
+        </div>
+
+        <!-- Activity Telemetry CSV Dropzone -->
+        <div class="control-group">
+          <label class="control-label">
+            <span>Activity Telemetry CSV</span>
+            <span style="color:var(--amber-light);font-size:9px;">XBRL-GHG</span>
+          </label>
+          <div id="csvDropzone" class="dropzone">
+            <input id="csvInput" type="file" accept=".csv" style="display:none;" />
+            <div class="icon-wrap">
+              <span class="material-symbols-outlined">upload_file</span>
+            </div>
+            <div class="dz-title">DROP ACTIVITY TELEMETRY .CSV</div>
+            <div class="dz-desc">Facility-level fuel, electricity & production metrics</div>
+            <div id="csvStatus"></div>
+          </div>
+        </div>
+
+        <!-- Primary Action Button -->
+        <button id="btnExecute" class="btn-primary">
+          <span id="btnExecuteSpinner" class="material-symbols-outlined" style="display:none;animation:spin 1s linear infinite;">sync</span>
+          <span id="btnExecuteLabel">EXPLORE &amp; EXECUTE PIPELINE ⟶</span>
+        </button>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN WORKSPACE -->
+    <main class="main-content">
+      
+      <!-- Workspace Header -->
+      <header class="workspace-header">
+        <div class="workspace-title-area">
+          <div class="workspace-badge-row">
+            <span id="provenanceBadge" class="badge-tag verified">VERIFIED_BRSR_FILING</span>
+            <span id="engineBadge" class="badge-tag engine">pdfplumber+pypdf</span>
+            <span class="badge-tag engine">SEBI CLAUSE 34(2)(f)</span>
+          </div>
+          <h1 id="companyTitle" class="company-title">ITC Limited</h1>
+          <div id="companySubtitle" class="company-subtitle">
+            <span>CIN: L16005WB1910PLC001985 &bull; BSE: 500875 / NSE: ITC</span>
+            <span class="dot">&bull;</span>
+            <span>India</span>
+            <span class="dot">&bull;</span>
+            <span>FY 2025-26</span>
+          </div>
+        </div>
+
+        <div class="header-status-box">
+          <div class="live-indicator">
+            <span class="pulse-dot"></span>
+            <span>LIVE REGULATORY ENGINE ACTIVE</span>
+          </div>
+          <div id="lastRunTimestamp" class="last-run-timestamp">LAST RUN: 2026-11-10 18:15:20 UTC</div>
+        </div>
+      </header>
+
+      <!-- 4-Step Regulatory Stepper -->
+      <section class="regulatory-stepper">
+        <!-- Step 1 -->
+        <div class="step-card active">
+          <div class="step-header">
+            <span class="step-num">STEP 01</span>
+            <span class="material-symbols-outlined step-status-icon">check_circle</span>
+          </div>
+          <div class="step-name">MCA Portal Identification</div>
+          <div id="step1Meta" class="step-meta">Ministry Corporate Registry Verified</div>
+        </div>
+        <!-- Step 2 -->
+        <div class="step-card active">
+          <div class="step-header">
+            <span class="step-num">STEP 02</span>
+            <span class="material-symbols-outlined step-status-icon">check_circle</span>
+          </div>
+          <div class="step-name">21-Character CIN Verified</div>
+          <div id="step2Meta" class="step-meta">CIN: L16005WB1910PLC001985</div>
+        </div>
+        <!-- Step 3 -->
+        <div class="step-card active">
+          <div class="step-header">
+            <span class="step-num">STEP 03</span>
+            <span class="material-symbols-outlined step-status-icon">check_circle</span>
+          </div>
+          <div class="step-name">BSE / NSE BRSR Filing</div>
+          <div id="step3Meta" class="step-meta">BSE: 500875 | NSE: ITC | FY 2025-26</div>
+        </div>
+        <!-- Step 4 -->
+        <div class="step-card active">
+          <div class="step-header">
+            <span class="step-num">STEP 04</span>
+            <span class="material-symbols-outlined step-status-icon">check_circle</span>
+          </div>
+          <div class="step-name">Section C / E: Principle 6</div>
+          <div id="step4Meta" class="step-meta">Scope 1/2/3 & Energy Reconciled</div>
+        </div>
+      </section>
+
+      <!-- 4 Top Animated KPI Cards -->
+      <section class="kpi-grid">
+        <!-- KPI 1 -->
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Total Extracted Footprint</span>
+            <span class="material-symbols-outlined kpi-icon">co2</span>
+          </div>
+          <div id="kpi1Val" class="kpi-value">—</div>
+          <div id="kpi1Sub" class="kpi-subtext">Scope 1 + Scope 2 + Scope 3</div>
+        </div>
+        <!-- KPI 2 -->
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Scope 1 Direct Combustion</span>
+            <span class="material-symbols-outlined kpi-icon">local_fire_department</span>
+          </div>
+          <div id="kpi2Val" class="kpi-value">—</div>
+          <div id="kpi2Sub" class="kpi-subtext">Stationary & Fleet Fuel</div>
+        </div>
+        <!-- KPI 3 -->
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Total Energy Consumed</span>
+            <span class="material-symbols-outlined kpi-icon">bolt</span>
+          </div>
+          <div id="kpi3Val" class="kpi-value">—</div>
+          <div id="kpi3Sub" class="kpi-subtext">Renewable vs Grid Electricity</div>
+        </div>
+        <!-- KPI 4 -->
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">ML Walk-Forward Skill</span>
+            <span class="material-symbols-outlined kpi-icon">trending_up</span>
+          </div>
+          <div id="kpi4Val" class="kpi-value">—</div>
+          <div id="kpi4Sub" class="kpi-subtext">Ridge vs Naive Baseline Skill</div>
+        </div>
+      </section>
+
+      <!-- TABS NAVIGATION -->
+      <nav class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-trajectory">
+          <span class="tab-num">[01]</span>
+          <span>Trajectory &amp; ML Forecast</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-brsr">
+          <span class="tab-num">[02]</span>
+          <span>BRSR Principle 6 &amp; GHG Scopes</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-report">
+          <span class="tab-num">[03]</span>
+          <span>Executive ESG &amp; BRSR Report</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-logs">
+          <span class="tab-num">[04]</span>
+          <span>MCA CIN Trail, EF Citations &amp; Logs</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: TRAJECTORY & ML FORECAST -->
+      <div id="tab-trajectory" class="tab-panel active">
+        <div class="content-card">
+          <div class="card-title-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined" style="color:var(--amber-light)">ssid_chart</span>
+              <span>Emissions Trajectory &amp; 7-Year ML Walk-Forward Forecast</span>
+            </div>
+            <div class="card-meta">2000–2025 Historical &bull; 2026–2032 ML Projection &bull; 95% Confidence Band</div>
+          </div>
+          <div id="trajectoryChart" class="chart-box"></div>
+          
+          <div id="decouplingMetric" style="margin-top:14px;padding:10px 14px;background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:6px;font-family:var(--font-mono);font-size:11px;">
+            Org CAGR: <strong>—</strong> &bull; Decoupling Alpha: <strong>—</strong>
+          </div>
+        </div>
+
+        <!-- ML Benchmark Models -->
+        <div class="content-card">
+          <div class="card-title-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined" style="color:var(--gold-primary)">model_training</span>
+              <span>Machine Learning Model Validation &amp; Cross-Validation Benchmark</span>
+            </div>
+            <div class="card-meta">5-Fold Expanding Window Walk-Forward Protocol</div>
+          </div>
+
+          <div class="ml-models-grid">
+            <!-- Model 1 -->
+            <div class="ml-card top-model">
+              <div class="ml-card-header">
+                <span class="ml-name">Ridge Regression (L2 Regularized)</span>
+                <span class="ml-badge-top">Top Performer</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>RMSE (Cross-Validated):</span>
+                <span id="m1Rmse" class="val">±48.2 ktCO₂e</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Skill vs Naive Baseline:</span>
+                <span id="m1Skill" class="val" style="color:var(--success-emerald);">+7.3%</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Validation Scheme:</span>
+                <span id="m1Folds" class="val">5-Fold Expanding Window</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Alpha Regularization:</span>
+                <span class="val">α = 1.0 (L2 Penalty)</span>
+              </div>
+            </div>
+
+            <!-- Model 2 -->
+            <div class="ml-card">
+              <div class="ml-card-header">
+                <span class="ml-name">Gradient Boosting Regressor</span>
+                <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);">ENSEMBLE</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>RMSE (Cross-Validated):</span>
+                <span id="m2Rmse" class="val">±50.1 ktCO₂e</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Hyperparameters:</span>
+                <span id="m2Res" class="val">100 Trees (η=0.05)</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Max Depth:</span>
+                <span class="val">Depth = 3</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Subsample Ratio:</span>
+                <span class="val">0.80</span>
+              </div>
+            </div>
+
+            <!-- Model 3 -->
+            <div class="ml-card">
+              <div class="ml-card-header">
+                <span class="ml-name">SARIMAX / Linear Trend Baseline</span>
+                <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);">BENCHMARK</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Naive Baseline RMSE:</span>
+                <span id="m3Rmse" class="val">±52.0 ktCO₂e</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Forecast Strategy:</span>
+                <span id="m3Baseline" class="val">Random Walk / Drift</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Directional Accuracy:</span>
+                <span class="val">68.4%</span>
+              </div>
+              <div class="ml-metric-row">
+                <span>Residual Mean:</span>
+                <span class="val">0.002</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: BRSR PRINCIPLE 6 & GHG SCOPES -->
+      <div id="tab-brsr" class="tab-panel">
+        <div class="chart-grid-dual">
+          <!-- Donut Scopes -->
+          <div class="content-card">
+            <div class="card-title-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined" style="color:var(--amber-light)">pie_chart</span>
+                <span>GHG Scopes Breakdown</span>
+              </div>
+              <div class="card-meta">Scope 1 &bull; Scope 2 &bull; Scope 3</div>
+            </div>
+            <div id="scopesDonutChart" class="chart-box" style="min-height:300px;"></div>
+          </div>
+
+          <!-- Energy Bar -->
+          <div class="content-card">
+            <div class="card-title-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined" style="color:var(--gold-primary)">energy_savings_leaf</span>
+                <span>Energy Matrix (TJ Consumed)</span>
+              </div>
+              <div class="card-meta">Renewable Clean vs Non-Renewable</div>
+            </div>
+            <div id="energyBarChart" class="chart-box" style="min-height:300px;"></div>
+          </div>
+        </div>
+
+        <!-- Official Principle 6 Table -->
+        <div class="content-card">
+          <div class="card-title-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined" style="color:var(--success-emerald)">verified</span>
+              <span>Audited SEBI BRSR Principle 6 Disclosures Matrix</span>
+            </div>
+            <div class="card-meta">Assurance: KPMG ISAE 3000 &bull; Current FY vs Previous FY Comparison</div>
+          </div>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Audited Parameter</th>
+                  <th>SEBI Regulation Indicator</th>
+                  <th class="text-right">Current FY 2025-26</th>
+                  <th class="text-right">Previous FY 2024-25</th>
+                  <th class="text-right">YoY Variance</th>
+                  <th class="text-right">Audit Assurance Provider</th>
+                </tr>
+              </thead>
+              <tbody id="p6TableBody">
+                <!-- Rows injected dynamically via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: EXECUTIVE ESG & BRSR REPORT -->
+      <div id="tab-report" class="tab-panel">
+        <div class="content-card">
+          <div class="card-title-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined" style="color:var(--gold-light)">menu_book</span>
+              <span>Official Executive BRSR Carbon &amp; ESG Intelligence Report</span>
+            </div>
+            <div class="card-meta">SEBI Business Responsibility & Sustainability Reporting Compliance Standard</div>
+          </div>
+
+          <div id="reportContent" class="report-viewer">
+            <!-- Rendered Markdown Report -->
+          </div>
+
+          <div class="report-actions">
+            <button id="btnDownloadReport" class="btn-secondary">
+              <span class="material-symbols-outlined">download</span>
+              <span>DOWNLOAD OFFICIAL REPORT (.MD) ⟶</span>
+            </button>
+            <button id="btnCopyReport" class="btn-secondary">
+              <span class="material-symbols-outlined">content_copy</span>
+              <span>COPY EXECUTIVE BRIEF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: MCA CIN TRAIL, EF CITATIONS & AGENT LOGS -->
+      <div id="tab-logs" class="tab-panel">
+        <!-- 5-Agent Execution Stream -->
+        <div class="content-card">
+          <div class="card-title-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined" style="color:var(--amber-light)">schema</span>
+              <span>5-Agent LangGraph Pipeline Execution Stream</span>
+            </div>
+            <div class="card-meta">Synchronous Distributed State Reconciliation</div>
+          </div>
+
+          <div id="traceStream" class="trace-feed">
+            <!-- Injected via app.js -->
+          </div>
+        </div>
+
+        <!-- Official Emission Factor Registry -->
+        <div class="content-card">
+          <div class="card-title-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined" style="color:var(--gold-primary)">menu_book</span>
+              <span>Official Statutory Emission Factor Citations</span>
+            </div>
+            <div class="card-meta">Government of India &amp; International Standards</div>
+          </div>
+
+          <div class="ef-cards-grid">
+            <div class="ef-card">
+              <div class="ef-title">CEA India Grid Emission Factor (v19.0 / v20.0)</div>
+              <div class="ef-val">0.716 tCO₂ / MWh</div>
+              <div class="ef-source">Central Electricity Authority (CEA), Ministry of Power, Govt of India. CO2 Baseline Database for Indian Power Sector (User Guide v19.0).</div>
+            </div>
+            <div class="ef-card">
+              <div class="ef-title">IPCC 2006 Stationary Combustion</div>
+              <div class="ef-val">94.6 tCO₂ / TJ</div>
+              <div class="ef-source">2006 IPCC Guidelines for National Greenhouse Gas Inventories, Volume 2: Energy, Chapter 2 (Stationary Combustion Tier 1/2 factors for Bituminous Coal).</div>
+            </div>
+            <div class="ef-card">
+              <div class="ef-title">UK DESNZ / Defra Logistics &amp; Freight</div>
+              <div class="ef-val">0.104 kgCO₂e / t-km</div>
+              <div class="ef-source">UK Department for Energy Security and Net Zero (DESNZ) GHG Conversion Factors for Company Reporting (Heavy Freight Rigid HGV avg).</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Annual Telemetry Data -->
+        <div class="content-card">
+          <div class="card-title-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined" style="color:var(--gold-light)">table_rows</span>
+              <span>Historical Enterprise Telemetry (2000–2025)</span>
+            </div>
+            <button id="btnExportHistCsv" class="btn-secondary" style="padding:6px 12px;font-size:10px;">
+              <span class="material-symbols-outlined" style="font-size:14px;">download</span>
+              <span>EXPORT HISTORICAL CSV</span>
+            </button>
+          </div>
+
+          <div class="data-table-wrap" style="max-height:360px;overflow-y:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Reporting Year</th>
+                  <th class="text-right">Emissions (ktCO₂e)</th>
+                  <th class="text-right">Emissions (tCO₂e)</th>
+                  <th class="text-right">Provenance &amp; Filing Reference</th>
+                </tr>
+              </thead>
+              <tbody id="histTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
-  </head><body class="bg-surface text-on-surface font-body-sm min-h-screen flex flex-col selection:bg-secondary-container selection:text-on-secondary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)]"><div class="h-20 px-margin-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><img alt="Inner Peace Sparkle Logo" class="h-8 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1VOMNavEBiMCHI-3d4U2nWuswBdbw60VFVZqOI4znfpW9QZ7ocpJlVPzJOK-jfMMxG2FTIY_pJ2PoDseb7_9uCLQ0JlLHoeqscR9_tnmuv4UIVHJ3-F-wM1Y0abnQK74Rm9f0Tjx01ehJJTGKaBnk-kkiceIVwkB9LZpj_-pTgr0pmL99cbwzOvhuQZBgsK2a757eI3I0EvIg3B1xdenfoLiEeNA0fr_8kimkrykWg"/><div class="flex flex-col min-w-0 justify-center"><div class="flex items-baseline gap-space-xs"><span class="font-headline-sm text-headline-sm italic text-primary tracking-wide leading-none truncate">INNER PEACE</span><span class="hidden xs:inline-block w-1 h-1 rounded-full bg-secondary-fixed/50"></span></div><span class="font-subhead-uppercase text-[9px] tracking-[0.25em] text-primary-fixed-dim uppercase leading-tight truncate">CARBON TRACE ✦</span></div></div><div class="flex items-center gap-space-xs shrink-0"><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container/60 shadow-[0_0_16px_-4px_rgba(200,121,44,0.35)]"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_#ffb77b]"></span><span class="font-subhead-uppercase text-[8px] tracking-[0.2em] text-secondary font-semibold uppercase">SIMULATED_DEMO</span></div><button class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-primary transition-colors active:scale-95"><span class="material-symbols-outlined text-[20px]">tune</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-20 pb-28 bg-surface"><div class="flex flex-col w-full px-margin-mobile pb-space-xl gap-space-lg">
-<!-- 1. Editorial Hero Header -->
-<section class="flex flex-col gap-space-sm pt-space-sm relative">
-<div class="flex items-center justify-between gap-space-xs flex-wrap">
-<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high/80 shadow-[0_0_20px_-4px_rgba(200,121,44,0.35)]">
-<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_#ffb77b]"></span>
-<span class="font-subhead-uppercase text-[9px] tracking-[0.25em] text-secondary font-semibold uppercase">SIMULATED_DEMO</span>
-</div>
-<div class="flex items-center gap-1 text-on-surface-variant font-data-mono text-data-mono text-[10px] tracking-[0.12em] opacity-80">
-<span class="material-symbols-outlined text-[12px] text-primary-container">fingerprint</span>
-<span>HASH: #7F0E2A</span>
-</div>
-</div>
-<div class="flex flex-col gap-1 mt-1">
-<div class="flex items-baseline justify-between gap-2">
-<h1 class="font-display-lg-mobile text-display-lg-mobile text-primary tracking-tight font-normal">
-          CARBON TRACE <span class="text-primary-container text-2xl font-light">✦</span>
-</h1>
-</div>
-<div class="flex items-center gap-2">
-<span class="font-subhead-uppercase text-subhead-uppercase text-secondary tracking-[0.28em] uppercase">MAISON DE SOIE</span>
-<span class="w-1 h-1 rounded-full bg-primary-container/40"></span>
-<span class="font-subhead-uppercase text-subhead-uppercase text-on-surface-variant tracking-[0.22em] uppercase">GLOBAL OPERATIONS</span>
-</div>
-</div>
-<p class="font-headline-sm text-[16px] leading-[24px] italic text-on-surface/90 font-light max-w-prose">
-      Synthesized telemetry on atmospheric expenditures, algorithmic verifications, and planetary boundaries.
-    </p>
-<div class="flex items-center gap-2 text-on-surface-variant/70 font-data-mono text-[10px] tracking-[0.15em] uppercase">
-<span class="material-symbols-outlined text-[13px] text-secondary">schedule</span>
-<span>LAST RUN 2024-10-24 14:32:08 UTC</span>
-<span class="text-primary-container/40">•</span>
-<span class="text-secondary-fixed">LIVE MODEL V4.2</span>
-</div>
-</section>
-<!-- Editorial Visual Vignette (Image Prompt Integration) -->
-<div class="w-full relative rounded-lg overflow-hidden h-36 bg-surface-container-high shadow-lg">
-<div class="bg-cover bg-center w-full h-full flex flex-col justify-end p-space-md" data-alt="Warm moody macro photograph of luxurious golden woven raw silk fabric draped organically against dark espresso timber in an architectural Parisian fashion atelier, low soft sunbeam lighting, amber luminescence, high grain luxury magazine aesthetic" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCZ8_RMbpfc-jPOLnk5FvTRKYA3fSoUEkU85XCuNQg55Smw2ccvxul216lNi7M8A0a-Wbm2opnz7pPvqWuBQ4y6yS_mIwD2QAkXK7AWOI8RBPLjLRx3_UxlNE8kh-PHdQ_VnZPjkSHnGp27xi0eNhGlBHhw8Mdz7nhBXlWXMNJYsXb8Ihr-ryioPLFr20I9OFLBt5ZCrIH-AQvrbUQVF-dkUR-9bzxSc5ONlXbFibQ')">
-<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/50 to-transparent"></div>
-<div class="relative z-10 flex items-center justify-between">
-<div class="flex flex-col">
-<span class="font-subhead-uppercase text-[9px] text-secondary tracking-[0.25em] uppercase">ATELIER DIRECTIVE</span>
-<span class="font-body-sm text-[12px] text-primary italic">Scope 3 Decarbonization Accord • Paris Division</span>
-</div>
-<span class="font-label-nav text-label-nav text-primary-container bg-surface-container-lowest/70 backdrop-blur-md px-2.5 py-1 rounded-full tracking-[0.2em] uppercase">ARCHIVE 2024</span>
-</div>
-</div>
-</div>
-<!-- 2. Atelier Control Panel (Interactive Capsule Drawer) -->
-<section class="flex flex-col rounded-lg bg-surface-container-high/90 backdrop-blur-xl p-space-md shadow-xl relative overflow-hidden">
-<div class="absolute top-0 right-0 w-44 h-44 rounded-full bg-gradient-to-bl from-secondary-container/20 to-transparent pointer-events-none"></div>
-<div class="flex items-center justify-between pb-space-sm mb-space-sm">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary-container text-[18px]">tune</span>
-<span class="font-subhead-uppercase text-subhead-uppercase text-primary tracking-[0.25em] uppercase">ATELIER TELEMETRY CONTROLS</span>
-</div>
-<span class="font-data-mono text-[10px] text-secondary uppercase tracking-[0.15em]">STOCHASTIC v2.1</span>
-</div>
-<div class="flex flex-col gap-space-md">
-<!-- Organization Selector -->
-<div class="flex flex-col gap-1.5">
-<label class="font-subhead-uppercase text-[10px] text-on-surface-variant tracking-[0.2em] uppercase">Target Entity</label>
-<div class="relative flex items-center bg-surface-container-lowest/90 rounded-full px-4 py-2.5 shadow-inner cursor-pointer hover:bg-surface-container-lowest transition-colors">
-<span class="material-symbols-outlined text-primary-container text-[18px] mr-2">domain</span>
-<span class="font-body-sm text-body-sm text-primary flex-1 truncate">Maison de Soie Couture (HQ Paris)</span>
-<span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
-</div>
-</div>
-<!-- OWID Country Selector -->
-<div class="flex flex-col gap-1.5">
-<label class="font-subhead-uppercase text-[10px] text-on-surface-variant tracking-[0.2em] uppercase">Territory &amp; Protocol Matrix</label>
-<div class="relative flex items-center bg-surface-container-lowest/90 rounded-full px-4 py-2.5 shadow-inner cursor-pointer hover:bg-surface-container-lowest transition-colors">
-<span class="material-symbols-outlined text-secondary text-[18px] mr-2">public</span>
-<span class="font-body-sm text-body-sm text-primary flex-1 truncate">Global Annex / France (OWID: FRA)</span>
-<span class="font-data-mono text-[10px] text-primary-container bg-surface-container-high px-2 py-0.5 rounded-full ml-1 font-semibold">OWID</span>
-</div>
-</div>
-<!-- Year Range Slider & Chips -->
-<div class="flex flex-col gap-2 pt-1">
-<div class="flex items-center justify-between">
-<label class="font-subhead-uppercase text-[10px] text-on-surface-variant tracking-[0.2em] uppercase">Reporting Period</label>
-<div class="flex items-center gap-1.5">
-<span class="font-data-mono text-[11px] text-primary font-medium" id="year-range-label">2000 — 2023</span>
-<span id="yearCount" class="text-[9px] text-secondary font-subhead-uppercase tracking-widest">(24Y)</span>
-</div>
-</div>
-<div class="flex flex-col gap-1">
-<label for="startYearSlider" class="font-subhead-uppercase text-[9px] text-on-surface-variant tracking-[0.2em] uppercase">Start year</label>
-<div class="relative flex items-center w-full py-2">
-<input class="w-full h-1 bg-surface-container-lowest rounded-lg appearance-none cursor-pointer accent-primary-container shadow-inner" id="startYearSlider" max="2022" min="2000" type="range" value="2000"/>
-</div>
-</div>
-<div class="flex flex-col gap-1">
-<label for="yearSlider" class="font-subhead-uppercase text-[9px] text-on-surface-variant tracking-[0.2em] uppercase">End year</label>
-<div class="relative flex items-center w-full py-2">
-<input class="w-full h-1 bg-surface-container-lowest rounded-lg appearance-none cursor-pointer accent-primary-container shadow-inner" id="yearSlider" max="2023" min="2001" type="range" value="2023"/>
-</div>
-</div>
-<div class="flex items-center justify-between gap-1 overflow-x-auto py-1">
-<button type="button" class="range-shortcut px-2.5 py-1 rounded-full bg-surface-container-lowest text-primary-container font-data-mono text-[10px] font-semibold tracking-wider" data-start-year="2000" data-end-year="2010">2000-2010</button>
-<button type="button" class="range-shortcut px-2.5 py-1 rounded-full bg-surface-container-lowest text-primary-container font-data-mono text-[10px] font-semibold tracking-wider" data-start-year="2010" data-end-year="2020">2010-2020</button>
-<button type="button" class="range-shortcut px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-data-mono text-[10px] font-semibold tracking-wider" data-start-year="2020" data-end-year="2023">2020-2023</button>
-</div>
-</div>
-<!-- CSV Telemetry Upload -->
-<div class="flex flex-col gap-1.5">
-<label class="font-subhead-uppercase text-[10px] text-on-surface-variant tracking-[0.2em] uppercase">Telemetry Ingestion Layer</label>
-<div class="flex flex-col items-center justify-center p-4 rounded-xl bg-surface-container-lowest/60 hover:bg-surface-container-lowest/90 transition-all cursor-pointer text-center group">
-<div class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center mb-2 text-primary-container group-hover:scale-110 transition-transform shadow-md">
-<span class="material-symbols-outlined text-[20px]">upload_file</span>
-</div>
-<span class="font-subhead-uppercase text-[10px] text-primary tracking-[0.2em] uppercase font-semibold">DRAG OR ATTACH CO2 TELEMETRY .CSV</span>
-<span class="font-data-mono text-[9px] text-on-surface-variant/80 tracking-wider mt-1">XBRL-GHG PROTOCOL CERTIFIED • MAX 64MB</span>
-</div>
-</div>
-<!-- Primary Action Button -->
-<button class="w-full py-3.5 px-6 rounded-full bg-primary-container text-on-primary font-subhead-uppercase text-subhead-uppercase font-bold tracking-[0.25em] flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(244,217,160,0.3)] hover:shadow-[0_0_32px_rgba(200,121,44,0.5)] active:scale-[0.98] transition-all">
-<span>EXPLORE &amp; REFRESH</span>
-<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-</button>
-</div>
-</section>
-<!-- 3. Glassmorphic KPI Cards (2x2 Mobile Grid) -->
-<section class="grid grid-cols-2 gap-space-sm">
-<!-- Card 1: Org Footprint -->
-<div class="flex flex-col rounded-lg bg-surface-container-high/80 backdrop-blur-md p-3.5 shadow-lg relative overflow-hidden justify-between">
-<div class="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-secondary/10 pointer-events-none"></div>
-<div class="flex flex-col gap-1">
-<div class="flex items-center justify-between gap-1">
-<span class="font-subhead-uppercase text-[9px] text-on-surface-variant tracking-[0.2em] uppercase">ORG FOOTPRINT</span>
-<span class="material-symbols-outlined text-primary-container text-[14px]">eco</span>
-</div>
-<div class="flex items-baseline gap-1 mt-1">
-<span class="font-kpi-stat text-[32px] leading-tight text-primary font-normal">42,850</span>
-<span class="font-data-mono text-[9px] text-secondary font-semibold uppercase">tCO2e</span>
-</div>
-</div>
-<div class="flex flex-col gap-1 mt-3 pt-2">
-<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/50 self-start shadow-[0_0_10px_rgba(200,121,44,0.3)]">
-<span class="material-symbols-outlined text-[10px] text-secondary">trending_up</span>
-<span class="font-data-mono text-[9px] text-on-secondary-container font-semibold">+2.4% VS BASE</span>
-</div>
-<span class="font-body-sm text-[10px] text-on-surface-variant/80 truncate">Scope 1, 2 &amp; Certified 3</span>
-</div>
-</div>
-<!-- Card 2: Walk-Forward RMSE -->
-<div class="flex flex-col rounded-lg bg-surface-container-high/80 backdrop-blur-md p-3.5 shadow-lg relative overflow-hidden justify-between">
-<div class="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-primary-container/10 pointer-events-none"></div>
-<div class="flex flex-col gap-1">
-<div class="flex items-center justify-between gap-1">
-<span class="font-subhead-uppercase text-[9px] text-on-surface-variant tracking-[0.2em] uppercase">VS NAIVE RMSE</span>
-<span class="material-symbols-outlined text-secondary text-[14px]">auto_graph</span>
-</div>
-<div class="flex items-baseline gap-1 mt-1">
-<span class="font-kpi-stat text-[32px] leading-tight text-primary-container font-normal">0.084</span>
-<span class="font-data-mono text-[9px] text-on-surface-variant font-semibold">δ</span>
-</div>
-</div>
-<div class="flex flex-col gap-1 mt-3 pt-2">
-<!-- Sparkline -->
-<svg class="w-full h-5" preserveaspectratio="none" viewbox="0 0 100 20">
-<path d="M0,16 Q20,18 35,9 T70,12 T100,3" fill="none" stroke="#f4d9a0" stroke-width="1.8"></path>
-<circle class="shadow-sm" cx="100" cy="3" fill="#ffb77b" r="2.5"></circle>
-</svg>
-<div class="flex items-center justify-between">
-<span class="font-data-mono text-[9px] text-secondary">+34.2% FIT</span>
-<span class="font-subhead-uppercase text-[8px] text-primary-container/90 uppercase tracking-widest">CONVERGED</span>
-</div>
-</div>
-</div>
-<!-- Card 3: Method Agreement F1 -->
-<div class="flex flex-col rounded-lg bg-surface-container-high/80 backdrop-blur-md p-3.5 shadow-lg relative overflow-hidden justify-between">
-<div class="flex flex-col gap-1">
-<div class="flex items-center justify-between gap-1">
-<span class="font-subhead-uppercase text-[9px] text-on-surface-variant tracking-[0.2em] uppercase">AGREEMENT F1</span>
-<span class="material-symbols-outlined text-primary-container text-[14px]">checklist_rtl</span>
-</div>
-<div class="flex items-baseline gap-1 mt-1">
-<span class="font-kpi-stat text-[32px] leading-tight text-primary font-normal">0.942</span>
-<span class="font-data-mono text-[9px] text-secondary font-semibold">F1</span>
-</div>
-</div>
-<div class="flex flex-col gap-1 mt-3 pt-2">
-<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-lowest self-start">
-<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
-<span class="font-data-mono text-[8px] text-primary-container tracking-wider uppercase">HIGH FIDELITY</span>
-</div>
-<span class="font-body-sm text-[10px] text-on-surface-variant/80 truncate">Forest vs Z-Score Anomaly</span>
-</div>
-</div>
-<!-- Card 4: Critic Completeness -->
-<div class="flex flex-col rounded-lg bg-surface-container-high/80 backdrop-blur-md p-3.5 shadow-lg relative overflow-hidden justify-between">
-<div class="flex flex-col gap-1">
-<div class="flex items-center justify-between gap-1">
-<span class="font-subhead-uppercase text-[9px] text-on-surface-variant tracking-[0.2em] uppercase">COMPLETENESS</span>
-<span class="material-symbols-outlined text-secondary text-[14px]">verified</span>
-</div>
-<div class="flex items-baseline gap-1 mt-1">
-<span class="font-kpi-stat text-[32px] leading-tight text-secondary font-normal">98.7%</span>
-</div>
-</div>
-<div class="flex flex-col gap-1 mt-3 pt-2">
-<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/40 self-start">
-<span class="font-subhead-uppercase text-[8px] text-secondary font-semibold tracking-widest uppercase">ASSURED ✦</span>
-</div>
-<span class="font-body-sm text-[10px] text-on-surface-variant/80 truncate">GHG Protocol Level 3</span>
-</div>
-</div>
-</section>
-<!-- 4. Interactive Visualization 1: Trajectory & Walk-Forward Projection -->
-<section class="flex flex-col rounded-lg bg-surface-container-high/90 backdrop-blur-xl p-space-md shadow-xl relative overflow-hidden">
-<div class="flex items-start justify-between mb-3">
-<div class="flex flex-col">
-<span class="font-subhead-uppercase text-[9px] text-secondary tracking-[0.28em] uppercase">DECENNIAL HORIZON</span>
-<h2 class="font-headline-sm text-[19px] text-primary font-normal leading-snug">Trajectory &amp; Walk-Forward Model</h2>
-</div>
-<div class="px-2 py-1 rounded-full bg-surface-container-lowest text-primary-container font-data-mono text-[9px] tracking-wider uppercase">
-        P-VAL &lt; 0.001
-      </div>
-</div>
-<!-- Interactive Legend and Current Callout -->
-<div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-surface-container-lowest/80 mb-3">
-<div class="flex items-center gap-3">
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-0.5 bg-primary-container inline-block"></span>
-<span class="font-data-mono text-[9px] text-on-surface uppercase">Historical (00-22)</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-0.5 border-t border-dashed border-secondary inline-block"></span>
-<span class="font-data-mono text-[9px] text-secondary uppercase">Forecast (23-30)</span>
-</div>
-</div>
-<div class="flex items-center gap-1 text-primary font-data-mono text-[10px]">
-<span class="text-secondary font-semibold">2024:</span>
-<span>39,210 tCO2e</span>
-</div>
-</div>
-<!-- Line & Area Chart Inline SVG -->
-<div class="w-full relative h-56 mt-1">
-<svg class="w-full h-full" fill="none" preserveaspectratio="none" viewbox="0 0 380 200">
-<defs>
-<lineargradient id="champagneGradient" x1="0%" x2="0%" y1="0%" y2="100%">
-<stop offset="0%" stop-color="#f4d9a0" stop-opacity="0.25"></stop>
-<stop offset="100%" stop-color="#19120c" stop-opacity="0.0"></stop>
-</lineargradient>
-<lineargradient id="amberForecastGradient" x1="0%" x2="0%" y1="0%" y2="100%">
-<stop offset="0%" stop-color="#c8792c" stop-opacity="0.20"></stop>
-<stop offset="100%" stop-color="#19120c" stop-opacity="0.0"></stop>
-</lineargradient>
-</defs>
-<!-- Horizontal Grid Lines -->
-<line stroke="#4c463b" stroke-opacity="0.2" stroke-width="1" x1="20" x2="360" y1="30" y2="30"></line>
-<line stroke="#4c463b" stroke-opacity="0.2" stroke-width="1" x1="20" x2="360" y1="75" y2="75"></line>
-<line stroke="#4c463b" stroke-opacity="0.2" stroke-width="1" x1="20" x2="360" y1="120" y2="120"></line>
-<line stroke="#4c463b" stroke-opacity="0.2" stroke-width="1" x1="20" x2="360" y1="165" y2="165"></line>
-<!-- Grid Labels -->
-<text fill="#989082" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="end" x="18" y="34">60k</text>
-<text fill="#989082" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="end" x="18" y="79">45k</text>
-<text fill="#989082" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="end" x="18" y="124">30k</text>
-<text fill="#989082" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="end" x="18" y="169">15k</text>
-<!-- Confidence Band for Walk-Forward (2023 - 2030) -->
-<polygon fill="url(#amberForecastGradient)" points="255,85 285,92 315,108 345,130 360,140 360,175 345,168 315,150 285,135 255,105"></polygon>
-<!-- Historical Area Fill (2000 - 2022) -->
-<path d="M25,145 Q60,130 95,115 T160,88 T215,96 L255,95 L255,170 L25,170 Z" fill="url(#champagneGradient)"></path>
-<!-- Historical Emissions Line (Solid Champagne Gold) -->
-<path d="M25,145 Q60,130 95,115 T160,88 T215,96 L255,95" stroke="#f4d9a0" stroke-linecap="round" stroke-width="2.5"></path>
-<!-- Forecast Line (Dashed Burnt Amber) -->
-<path d="M255,95 Q285,115 315,130 T360,158" stroke="#ffb77b" stroke-dasharray="4,4" stroke-linecap="round" stroke-width="2.5"></path>
-<!-- Historical Anchors -->
-<circle cx="25" cy="145" fill="#f4d9a0" r="3"></circle>
-<circle cx="95" cy="115" fill="#f4d9a0" r="3"></circle>
-<circle cx="160" cy="88" fill="#f4d9a0" r="3"></circle>
-<circle cx="215" cy="96" fill="#f4d9a0" r="3"></circle>
-<circle cx="255" cy="95" fill="#f4d9a0" r="4.5" stroke="#19120c" stroke-width="2"></circle>
-<!-- 2024 Forecast Point with Amber Glow -->
-<circle class="animate-pulse" cx="285" cy="115" fill="#ffb77b" r="5" stroke="#3e2e04" stroke-width="2"></circle>
-<!-- 2030 Net-Zero Milestone Marker -->
-<circle cx="360" cy="158" fill="#dec48c" r="4" stroke="#19120c" stroke-width="1.5"></circle>
-<line stroke="#dec48c" stroke-dasharray="2,2" stroke-width="1" x1="360" x2="360" y1="158" y2="180"></line>
-<text fill="#f4d9a0" font-family="'Plus Jakarta Sans'" font-size="8" font-weight="600" text-anchor="middle" x="360" y="190">NZ '30</text>
-<!-- X Axis Years -->
-<text fill="#989082" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="middle" x="25" y="184">'00</text>
-<text fill="#989082" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="middle" x="95" y="184">'06</text>
-<text fill="#989082" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="middle" x="160" y="184">'12</text>
-<text fill="#989082" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="middle" x="215" y="184">'18</text>
-<text fill="#f4d9a0" font-family="'Plus Jakarta Sans'" font-size="8" font-weight="600" text-anchor="middle" x="255" y="184">'22</text>
-<text fill="#ffb77b" font-family="'Plus Jakarta Sans'" font-size="8" text-anchor="middle" x="315" y="184">'26</text>
-</svg>
-</div>
-<div class="flex items-center justify-between pt-2 text-[10px] text-on-surface-variant font-data-mono">
-<span>MONTE CARLO RUNS: 10,000</span>
-<span class="text-secondary font-medium">TARGET: 18,500 tCO2e BY 2030</span>
-</div>
-</section>
-<!-- 4. Interactive Visualization 2: Scope 1, 2, 3 Partition Donut Chart -->
-<section class="flex flex-col rounded-lg bg-surface-container-high/90 backdrop-blur-xl p-space-md shadow-xl relative overflow-hidden">
-<div class="flex items-center justify-between mb-2">
-<div class="flex flex-col">
-<span class="font-subhead-uppercase text-[9px] text-secondary tracking-[0.25em] uppercase">CARBON INVENTORY SPECTRUM</span>
-<h2 class="font-headline-sm text-[18px] text-primary font-normal leading-snug">GHG Scope Partitioning</h2>
-</div>
-<span class="material-symbols-outlined text-primary-container text-[20px]">pie_chart</span>
-</div>
-<div class="flex flex-col items-center justify-center py-2 relative">
-<!-- Luxury Donut SVG -->
-<div class="relative w-44 h-44 flex items-center justify-center">
-<svg class="w-full h-full -rotate-90" viewbox="0 0 160 160">
-<!-- Background Track -->
-<circle cx="80" cy="80" fill="transparent" r="62" stroke="#261e18" stroke-width="16"></circle>
-<!-- Scope 3 (74% -> stroke-dasharray: 288 390) Champagne Gold -->
-<circle class="transition-all duration-700" cx="80" cy="80" fill="transparent" r="62" stroke="#f4d9a0" stroke-dasharray="288 390" stroke-dashoffset="0" stroke-width="16"></circle>
-<!-- Scope 2 (18% -> stroke-dasharray: 70 390) Burnt Amber -->
-<circle class="transition-all duration-700" cx="80" cy="80" fill="transparent" r="62" stroke="#ffb77b" stroke-dasharray="70 390" stroke-dashoffset="-292" stroke-width="16"></circle>
-<!-- Scope 1 (8% -> stroke-dasharray: 31 390) Rich Mocha -->
-<circle class="transition-all duration-700" cx="80" cy="80" fill="transparent" r="62" stroke="#564419" stroke-dasharray="31 390" stroke-dashoffset="-364" stroke-width="16"></circle>
-</svg>
-<!-- Donut Center Telemetry Info -->
-<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-<span class="font-subhead-uppercase text-[8px] text-on-surface-variant tracking-[0.2em] uppercase">TOTAL</span>
-<span class="font-headline-sm text-[20px] text-primary font-normal leading-tight">100%</span>
-<span class="font-data-mono text-[8px] text-secondary tracking-widest uppercase">AUDITED</span>
-</div>
-</div>
-</div>
-<!-- Breakdown Legend Cards -->
-<div class="flex flex-col gap-2 mt-2">
-<!-- Scope 3 -->
-<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest/70">
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
-<div class="flex flex-col">
-<span class="font-body-sm text-[12px] text-primary font-medium">Scope 3: Upstream &amp; Retailing</span>
-<span class="font-data-mono text-[9px] text-on-surface-variant">Supply Chain Raw Wool, Silks &amp; Logistical Cargo</span>
-</div>
-</div>
-<div class="flex flex-col items-end">
-<span class="font-headline-sm text-[15px] text-primary-container font-normal">74.0%</span>
-<span class="font-data-mono text-[9px] text-on-surface-variant">31,709 tCO2e</span>
-</div>
-</div>
-<!-- Scope 2 -->
-<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest/70">
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
-<div class="flex flex-col">
-<span class="font-body-sm text-[12px] text-primary font-medium">Scope 2: Purchased Grid Energy</span>
-<span class="font-data-mono text-[9px] text-on-surface-variant">Flagship Boutiques &amp; Design Studios</span>
-</div>
-</div>
-<div class="flex flex-col items-end">
-<span class="font-headline-sm text-[15px] text-secondary font-normal">18.0%</span>
-<span class="font-data-mono text-[9px] text-on-surface-variant">7,713 tCO2e</span>
-</div>
-</div>
-<!-- Scope 1 -->
-<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest/70">
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded-full bg-on-primary-fixed-variant"></span>
-<div class="flex flex-col">
-<span class="font-body-sm text-[12px] text-primary font-medium">Scope 1: Direct Manufacturing</span>
-<span class="font-data-mono text-[9px] text-on-surface-variant">On-premise Boilers &amp; Fleet Electrification</span>
-</div>
-</div>
-<div class="flex flex-col items-end">
-<span class="font-headline-sm text-[15px] text-on-surface font-normal">8.0%</span>
-<span class="font-data-mono text-[9px] text-on-surface-variant">3,428 tCO2e</span>
-</div>
-</div>
-</div>
-</section>
-<!-- Editorial Dispatch Photo Accent -->
-<div class="w-full relative rounded-lg overflow-hidden h-40 bg-surface-container shadow-md">
-<div class="bg-cover bg-center w-full h-full flex items-end p-space-md" data-alt="High contrast editorial magazine shot of sustainable botanical dyes, organic glass vials, and archival ledger papers resting on dark polished walnut table, warm amber spotlight, luxury editorial still life" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDnX0qEtDkimyB3JnNs4T8WhjNY7o7-W0hjmYspn6eZy28J-FlixO_xP0TiUuRPRyfPp4om2Y7mt6QcZPes1T8O7MfT63Hy8IhLRqSP6_Cfv0opBZscR4FoTpYu61uBQQVFkT6hCV_kdWEcDRJzlfiNDc63Eqo_tnvAOehhQZlGammsLUARCpuKh06z4zFAE09HUEBI9CGHb4Hu0XLJh5v3VPWn6z9dwW92oGRVRTA')">
-<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
-<div class="relative z-10 flex flex-col">
-<span class="font-subhead-uppercase text-[8px] text-secondary tracking-[0.25em] uppercase">DOCUMENTATION PROTOCOL</span>
-<span class="font-headline-sm text-[16px] text-primary italic">"True craftsmanship requires complete transparency with the earth."</span>
-</div>
-</div>
-</div>
-<!-- 5. Markdown Report Journal Viewer -->
-<section class="flex flex-col rounded-lg bg-surface-container-high/90 backdrop-blur-xl p-space-md shadow-xl relative">
-<div class="flex items-center justify-between border-b border-primary-container/10 pb-space-sm mb-space-sm">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-secondary text-[18px]">menu_book</span>
-<span class="font-subhead-uppercase text-subhead-uppercase text-primary tracking-[0.25em] uppercase">REPORT SUMMARY</span>
-</div>
-<span class="font-data-mono text-[10px] text-on-surface-variant bg-surface-container-lowest px-2 py-0.5 rounded-full">LATEST RUN</span>
-</div>
-<article class="flex flex-col gap-space-sm text-on-surface">
-<div class="flex flex-col gap-1">
-<h3 id="reportTitle" class="font-headline-sm text-[20px] text-primary-container leading-snug font-normal">Latest reporting period</h3>
-<span id="reportMeta" class="font-data-mono text-[10px] text-secondary tracking-widest uppercase">ACTIVITY DATA SUMMARY</span>
-</div>
-<p id="reportNarrative" class="font-body-lg text-body-lg text-on-surface/90 leading-relaxed font-light">Loading the latest CarbonTrace results…</p>
-<div class="p-space-sm rounded-lg bg-surface-container-lowest/90 my-1">
-<p id="reportTakeaway" class="font-body-sm text-[12px] italic text-primary-fixed-dim leading-relaxed">The largest included emissions source will appear here.</p>
-</div>
-<div class="flex items-center justify-between pt-2">
-<div class="flex items-center gap-2">
-<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-headline-sm text-[13px] font-bold">
-            CT
-          </div>
-<div class="flex flex-col">
-<span class="font-body-sm text-[12px] text-primary font-medium">CarbonTrace pipeline</span>
-<span id="reportStatus" class="font-data-mono text-[9px] text-secondary">Required report fields pending</span>
-</div>
-</div>
-<span class="material-symbols-outlined text-primary-container text-[20px]">verified_user</span>
-</div>
-</article>
-<!-- Action Buttons -->
-<div class="grid grid-cols-2 gap-space-sm mt-space-md pt-space-sm">
-<button class="py-2.5 px-3 rounded-full bg-surface-container-lowest text-primary hover:bg-surface-container hover:text-primary-container font-subhead-uppercase text-[9px] tracking-[0.2em] font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm">
-<span class="material-symbols-outlined text-[14px]">download</span>
-<span>EXPORT PDF</span>
-</button>
-<button class="py-2.5 px-3 rounded-full bg-secondary-container/30 text-secondary hover:bg-secondary-container hover:text-on-secondary-container font-subhead-uppercase text-[9px] tracking-[0.2em] font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm">
-<span class="material-symbols-outlined text-[14px]">receipt_long</span>
-<span>AUDIT LOG</span>
-</button>
-</div>
-</section>
-</div>
-<script>
-  (function () {
-    const orgOptions = ["Apex Manufacturing Pvt Ltd", "GreenGrid Logistics Corp"];
-    const countryOptions = ["India", "United States", "China", "European Union (27)", "United Kingdom", "Germany", "Japan", "World"];
-    const byText = (selector, text) => Array.from(document.querySelectorAll(selector)).find((node) => node.textContent.trim() === text);
-    const setExactText = (oldText, nextText) => {
-      document.querySelectorAll("span, p, h1, h2, h3, div, button").forEach((node) => {
-        if (node.childElementCount === 0 && node.textContent.trim() === oldText) node.textContent = nextText;
-      });
-    };
-    const formatNumber = (value, digits = 2) => Number.isFinite(Number(value))
-      ? Number(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })
-      : "N/A";
-    const makeSelector = (labelText, id, options) => {
-      const label = byText("label", labelText);
-      const wrapper = label?.nextElementSibling;
-      if (!wrapper) return null;
-      const iconName = wrapper.querySelector(".material-symbols-outlined")?.textContent.trim() || "tune";
-      const icon = document.createElement("span");
-      icon.className = "material-symbols-outlined text-primary-container text-[18px] mr-2";
-      icon.textContent = iconName;
-      const select = document.createElement("select");
-      select.id = id;
-      select.className = "font-body-sm text-primary flex-1 min-w-0 bg-transparent outline-none";
-      select.style.color = "#efe0d5";
-      select.style.colorScheme = "dark";
-      options.forEach((value) => {
-        const option = document.createElement("option");
-        option.value = value;
-        option.textContent = value;
-        option.style.color = "#efe0d5";
-        option.style.backgroundColor = "#130d07";
-        select.append(option);
-      });
-      wrapper.replaceChildren(icon, select);
-      return select;
-    };
 
-    const orgSelect = makeSelector("Target Entity", "orgSelect", orgOptions);
-    const countrySelect = makeSelector("Territory & Protocol Matrix", "countrySelect", countryOptions);
-    const startSlider = document.getElementById("startYearSlider");
-    const slider = document.getElementById("yearSlider");
-    const rangeLabel = document.getElementById("year-range-label");
-    const yearCount = document.getElementById("yearCount");
-    const runButton = byText("span", "EXPLORE & REFRESH")?.closest("button");
-    const runLabel = runButton?.querySelector("span");
-    const csvZone = byText("span", "DRAG OR ATTACH CO2 TELEMETRY .CSV")?.closest(".group");
-    const csvInput = document.createElement("input");
-    csvInput.type = "file";
-    csvInput.accept = ".csv,text/csv";
-    csvInput.hidden = true;
-    csvZone?.append(csvInput);
-
-    let activeCsv = null;
-    let latestPayload = null;
-
-    const years = () => ({ start_year: Number(startSlider?.value || 2000), end_year: Number(slider?.value || 2023) });
-    const updateRange = () => {
-      let start = Number(startSlider.value);
-      let end = Number(slider.value);
-      if (start >= end) {
-        if (document.activeElement === startSlider && start < 2023) {
-          end = start + 1;
-          slider.value = String(end);
-        } else {
-          start = Math.max(2000, end - 1);
-          startSlider.value = String(start);
-        }
-      }
-      startSlider.max = String(Math.min(2022, end - 1));
-      slider.min = String(Math.max(2001, start + 1));
-      rangeLabel.textContent = `${start} — ${end}`;
-      yearCount.textContent = `(${end - start + 1}Y)`;
-    };
-
-    function renderTrajectory(payload) {
-      const chartSection = Array.from(document.querySelectorAll("section")).find((section) =>
-        section.querySelector("h2")?.textContent.includes("Trajectory & Walk-Forward Model"));
-      const svg = chartSection?.querySelector("svg");
-      if (!svg) return;
-      const chartFrame = svg.parentElement;
-      if (chartFrame) chartFrame.style.height = `${Math.max(190, Math.min(400, chartFrame.clientWidth / 2.35))}px`;
-      const history = payload.history || [];
-      const forecast = payload.forecast || [];
-      const historicalValues = history.map((row) => Number(row.total_org_tco2e));
-      const forecastValues = forecast.map((row) => Number(row.predicted_org_tco2e));
-      const all = [...historicalValues, ...forecastValues].filter(Number.isFinite);
-      if (all.length < 2) return;
-
-      const plot = { left: 58, right: 366, top: 30, bottom: 160 };
-      const rawMin = Math.min(...all);
-      const rawMax = Math.max(...all);
-      const padding = Math.max((rawMax - rawMin) * 0.1, Math.abs(rawMax) * 0.02, 1);
-      const min = Math.max(0, rawMin - padding);
-      const max = rawMax + padding;
-      const totalPoints = history.length + forecast.length;
-      const x = (index) => plot.left + (index / Math.max(1, totalPoints - 1)) * (plot.right - plot.left);
-      const y = (value) => plot.bottom - ((value - min) / (max - min || 1)) * (plot.bottom - plot.top);
-      const historyCoords = historicalValues.map((value, index) => [x(index), y(value)]);
-      const forecastCoords = forecastValues.map((value, index) => [x(history.length + index), y(value)]);
-      const toPoints = (coords) => coords.map(([xValue, yValue]) => `${xValue},${yValue}`).join(" ");
-      const firstForecast = forecast[0];
-      const callout = chartSection.querySelector(".text-secondary.font-semibold")?.parentElement;
-      if (callout && firstForecast) callout.innerHTML = `<span class="text-secondary font-semibold">${firstForecast.year}:</span><span>${formatNumber(firstForecast.predicted_org_tco2e, 1)} tCO₂e</span>`;
-      const footer = chartSection.querySelector(".text-secondary.font-medium");
-      if (footer) footer.textContent = `HORIZON: ${payload.metrics.forecast_horizon || "N/A"}`;
-      const ticks = [0, 1, 2, 3].map((index) => {
-        const ratio = index / 3;
-        const value = max - ratio * (max - min);
-        const yValue = plot.top + ratio * (plot.bottom - plot.top);
-        const label = value >= 1000 ? `${(value / 1000).toFixed(1)}k` : `${Math.round(value)}`;
-        return `<line x1="${plot.left}" y1="${yValue}" x2="${plot.right}" y2="${yValue}" stroke="#4c463b" stroke-opacity=".35"/><text x="${plot.left - 7}" y="${yValue + 3}" fill="#989082" font-size="8" text-anchor="end">${label}</text>`;
-      }).join("");
-      const historyArea = historyCoords.length > 1
-        ? `<polygon points="${toPoints([...historyCoords, [historyCoords.at(-1)[0], plot.bottom], [historyCoords[0][0], plot.bottom]])}" fill="url(#champagneGradient)"/>`
-        : "";
-      const upperCoords = forecast.map((row, index) => [x(history.length + index), y(Number(row.ci_upper_tco2e ?? row.predicted_org_tco2e))]);
-      const lowerCoords = forecast.map((row, index) => [x(history.length + index), y(Number(row.ci_lower_tco2e ?? row.predicted_org_tco2e))]).reverse();
-      const forecastBand = forecast.length
-        ? `<polygon points="${toPoints([...upperCoords, ...lowerCoords])}" fill="url(#amberForecastGradient)"/>`
-        : "";
-      const transitionX = historyCoords.at(-1)?.[0] ?? plot.left;
-      const yearLabels = [
-        { index: 0, year: history[0]?.year, anchor: "start" },
-        { index: Math.max(0, history.length - 1), year: history.at(-1)?.year, anchor: "middle" },
-        { index: totalPoints - 1, year: forecast.at(-1)?.year ?? history.at(-1)?.year, anchor: "end" },
-      ].filter((item) => item.year != null);
-      const xLabels = yearLabels.map((item) =>
-        `<text x="${x(item.index)}" y="185" fill="#989082" font-size="8" text-anchor="${item.anchor}">${item.year}</text>`
-      ).join("");
-
-      svg.innerHTML = `
-        <defs>
-          <linearGradient id="champagneGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f4d9a0" stop-opacity=".2"/><stop offset="100%" stop-color="#19120c" stop-opacity="0"/></linearGradient>
-          <linearGradient id="amberForecastGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#ffb77b" stop-opacity=".18"/><stop offset="100%" stop-color="#19120c" stop-opacity=".02"/></linearGradient>
-        </defs>
-        <title>Historical emissions and illustrative walk-forward projection in tonnes of CO2 equivalent</title>
-        ${ticks}
-        ${historyArea}
-        ${forecastBand}
-        <polyline points="${toPoints(historyCoords)}" fill="none" stroke="#f4d9a0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        ${forecastCoords.length ? `<line x1="${transitionX}" y1="${plot.top}" x2="${transitionX}" y2="${plot.bottom}" stroke="#989082" stroke-opacity=".55" stroke-dasharray="3 4"/><polyline points="${toPoints([historyCoords.at(-1), ...forecastCoords])}" fill="none" stroke="#ffb77b" stroke-width="2.5" stroke-dasharray="5 4" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
-        ${historyCoords.map(([xValue, yValue]) => `<circle cx="${xValue}" cy="${yValue}" r="2" fill="#f4d9a0"/>`).join("")}
-        ${forecastCoords.map(([xValue, yValue]) => `<circle cx="${xValue}" cy="${yValue}" r="2" fill="#ffb77b"/>`).join("")}
-        ${xLabels}`;
-    }
-
-    function buildNaturalSummary(payload) {
-      const metrics = payload.metrics || {};
-      const startYear = payload.period.start_year;
-      const endYear = payload.period.end_year;
-      const change = Number(metrics.org_net_change_pct);
-      const changeSentence = Number.isFinite(change)
-        ? `Compared with ${startYear}, emissions were ${formatNumber(Math.abs(change), 1)}% ${change >= 0 ? "higher" : "lower"}.`
-        : "A percentage change was not available for this period.";
-      const scopeTotal = (payload.scopes || []).reduce((sum, item) => sum + Number(item.tco2e || 0), 0);
-      const largestScope = [...(payload.scopes || [])].sort((a, b) => Number(b.tco2e) - Number(a.tco2e))[0];
-      const largestShare = largestScope && scopeTotal
-        ? (Number(largestScope.tco2e) / scopeTotal) * 100
-        : null;
-      const largestScopeName = largestScope
-        ? largestScope.label.toLowerCase().includes("scope 2")
-          ? "purchased electricity (Scope 2)"
-          : largestScope.label.toLowerCase().includes("scope 1")
-            ? "fuel and fleet (Scope 1)"
-            : largestScope.label.toLowerCase().includes("scope 3")
-              ? "business travel and freight (Scope 3)"
-              : largestScope.label
-        : "an included source";
-      const sourceSentence = payload.provenance === "SIMULATED_DEMO"
-        ? "This run uses simulated activity data for the class-project demonstration."
-        : `This run uses activity data from ${payload.provenance}.`;
-      const boundarySentence = "The total covers only the activity categories listed in this prototype; OWID is used as national context, not as company emissions.";
-      const ridgeRmse = Number(metrics.ridge_rmse_tco2e);
-      const naiveRmse = Number(metrics.naive_rmse_tco2e);
-      let forecastSentence = "A forecast is not available for this reporting period.";
-      if (Number.isFinite(ridgeRmse) && Number.isFinite(naiveRmse)) {
-        forecastSentence = metrics.worse_than_baseline
-          ? `On ${metrics.walk_forward_folds} walk-forward test folds, Ridge did not beat the previous-year baseline, so treat its projection as illustrative.`
-          : `On ${metrics.walk_forward_folds} walk-forward test folds, Ridge had lower RMSE than the previous-year baseline; the projection is still illustrative because the history is short.`;
-      }
-
-      return {
-        narrative: `For ${payload.organization}, estimated emissions from the included activities were ${formatNumber(metrics.end_org_tco2e, 1)} tCO₂e in ${endYear}. ${changeSentence} ${sourceSentence} ${boundarySentence} ${forecastSentence}`,
-        takeaway: largestScope
-          ? `The largest included source was ${largestScopeName}, at ${formatNumber(largestScope.tco2e, 1)} tCO₂e${largestShare == null ? "" : ` (${formatNumber(largestShare, 1)}% of the included total)`}.`
-          : "No scope breakdown was available for this run.",
-      };
-    }
-
-    function hydrate(payload) {
-      latestPayload = payload;
-      document.title = "CarbonTrace | Organizational Carbon Dashboard";
-      if (!payload.ok) throw new Error(payload.data_quality?.error || "Pipeline could not produce a report.");
-      const metrics = payload.metrics || {};
-      const logoImage = document.querySelector('img[alt="Inner Peace Sparkle Logo"]');
-      if (logoImage) {
-        const logoIcon = document.createElement("span");
-        logoIcon.className = "material-symbols-outlined text-primary-container text-[30px]";
-        logoIcon.textContent = "eco";
-        logoImage.replaceWith(logoIcon);
-      }
-      setExactText("INNER PEACE", "CARBONTRACE");
-      setExactText("MAISON DE SOIE", "ORGANIZATIONAL FOOTPRINT");
-      setExactText("Maison de Soie Couture (HQ Paris)", payload.organization);
-      setExactText("Global Annex / France (OWID: FRA)", `${payload.country} (OWID benchmark)`);
-      setExactText("GLOBAL OPERATIONS", `${payload.country} BENCHMARK`);
-      setExactText("STOCHASTIC v2.1", "WALK-FORWARD MODEL");
-      setExactText("LAST RUN 2024-10-24 14:32:08 UTC", `LAST RUN ${payload.last_run}`);
-      const runTimestamp = Array.from(document.querySelectorAll("span")).find((node) => node.textContent.startsWith("LAST RUN "));
-      if (runTimestamp) runTimestamp.id = "lastRun";
-      setExactText("LIVE MODEL V4.2", "SIMULATED / EXTERNAL ACTIVITY DATA");
-      document.querySelectorAll("span").forEach((node) => {
-        if (node.textContent.trim() === "SIMULATED_DEMO") node.textContent = payload.provenance;
-      });
-      const headerBadge = Array.from(document.querySelectorAll("header span")).find((node) => node.textContent.trim() === payload.provenance);
-      if (headerBadge && payload.provenance === "SIMULATED_DEMO") headerBadge.textContent = "DEMO";
-      document.querySelector("header .w-8.h-8.rounded-full")?.remove();
-      setExactText("#7F0E2A", "OWID + ACTIVITY LEDGER");
-      setExactText("HASH: #7F0E2A", "SOURCE: OWID + ACTIVITY LEDGER");
-      setExactText("ATELIER TELEMETRY CONTROLS", "CARBONTRACE DATA CONTROLS");
-      setExactText("Synthesized telemetry on atmospheric expenditures, algorithmic verifications, and planetary boundaries.", "Activity-based estimates for selected categories, with national OWID benchmarking.");
-      setExactText("XBRL-GHG PROTOCOL CERTIFIED • MAX 64MB", "CSV schema is validated by the ingestion agent");
-      setExactText("42,850", formatNumber(metrics.end_org_tco2e, 0));
-      setExactText("+2.4% VS BASE", `${formatNumber(metrics.org_net_change_pct, 1)}% VS BASE`);
-      setExactText("0.084", formatNumber(metrics.ridge_rmse_tco2e, 3));
-      setExactText("+34.2% FIT", metrics.ridge_rmse_tco2e == null ? "INSUFFICIENT HISTORY" : `NAIVE ${formatNumber(metrics.naive_rmse_tco2e, 2)}`);
-      setExactText("CONVERGED", "WALK-FORWARD");
-      setExactText("0.942", formatNumber(metrics.agreement_f1, 3));
-      setExactText("HIGH FIDELITY", "METHOD AGREEMENT");
-      setExactText("98.7%", `${formatNumber(payload.critic_completeness, 1)}%`);
-      setExactText("ASSURED ✦", payload.critic_approved ? "REPORT CHECKS PASSED" : "REPORT CHECKS FAILED");
-      setExactText("GHG Protocol Level 3", "Completeness checks; not certification");
-      setExactText("P-VAL < 0.001", "WALK-FORWARD VALIDATION");
-      setExactText("DECENNIAL HORIZON", "HISTORY + PROJECTION");
-      setExactText("Historical (00-22)", `History (${metrics.forecast_horizon ? payload.period.start_year : ""}–${payload.period.end_year})`);
-      setExactText("Forecast (23-30)", `Projection (${metrics.forecast_horizon || "N/A"})`);
-      setExactText("MONTE CARLO RUNS: 10,000", `WALK-FORWARD FOLDS: ${metrics.walk_forward_folds ?? "N/A"}`);
-      setExactText("TARGET: 18,500 tCO2e BY 2030", `OWID ${payload.country}: ${formatNumber(metrics.owid_national_end_co2_mt, 1)} Mt CO₂`);
-      setExactText("Scope 3: Upstream & Retailing", "Scope 3: Business Travel & Freight");
-      setExactText("Scope 1, 2 & Certified 3", "Selected Scope 1, 2 & 3 categories");
-      setExactText("Supply Chain Raw Wool, Silks & Logistical Cargo", "Included flights and HGV freight categories");
-      setExactText("Scope 2: Purchased Grid Energy", "Scope 2: Purchased Electricity");
-      setExactText("Flagship Boutiques & Design Studios", "Location-based grid electricity");
-      setExactText("Scope 1: Direct Manufacturing", "Scope 1: Fuel & Fleet");
-      setExactText("On-premise Boilers & Fleet Electrification", "Included diesel, natural gas and fleet activity");
-      setExactText("AUDITED", "INCLUDED");
-      setExactText("ATELIER DIRECTIVE", "DATA PROVENANCE");
-      setExactText("Scope 3 Decarbonization Accord • Paris Division", `${payload.provenance} • selected categories only`);
-      setExactText("ARCHIVE 2024", `${payload.country} • OWID`);
-      setExactText("DOCUMENTATION PROTOCOL", "REPORTING NOTE");
-      setExactText("\"True craftsmanship requires complete transparency with the earth.\"", "National OWID emissions are a benchmark, not organization activity data.");
-      setExactText("ISSUE #42", "LATEST RUN");
-      setExactText("DISPATCH FILED: OCT 2024 • VOL. XII", `${payload.organization} · ${payload.provenance}`);
-      const reportSection = Array.from(document.querySelectorAll("section")).find((section) =>
-        section.textContent.includes("REPORT SUMMARY"));
-      const reportArticle = reportSection?.querySelector("article");
-      if (reportArticle) {
-        const summary = buildNaturalSummary(payload);
-        const title = reportArticle.querySelector("#reportTitle");
-        const meta = reportArticle.querySelector("#reportMeta");
-        const narrative = reportArticle.querySelector("#reportNarrative");
-        const takeaway = reportArticle.querySelector("#reportTakeaway");
-        const status = reportArticle.querySelector("#reportStatus");
-        if (title) title.textContent = `Carbon footprint summary · ${payload.period.start_year}–${payload.period.end_year}`;
-        if (meta) meta.textContent = `${payload.organization} · ${payload.provenance}`;
-        if (narrative) narrative.textContent = summary.narrative;
-        if (takeaway) takeaway.textContent = summary.takeaway;
-        if (status) status.textContent = payload.critic_approved ? "Required report fields present" : "Review flagged missing report fields";
-      }
-      setExactText("INNER PEACE CARBON INTELLIGENCE © 2024", "CARBONTRACE CLASS PROJECT · SIMULATED/EXTERNAL ACTIVITY DATA");
-      setExactText("Chief Sustainability Atelier", "CarbonTrace reporting agent");
-      setExactText("VERIFIED & ACCREDITED ✦", "DETERMINISTIC REPORT");
-      setExactText("EXPORT PDF", "DOWNLOAD REPORT");
-
-      const scopeRows = Array.from(document.querySelectorAll(".flex.items-center.justify-between.p-2.rounded-lg"));
-      const scopeOrder = [2, 1, 0];
-      scopeRows.forEach((row, index) => {
-        const scope = payload.scopes?.[scopeOrder[index]];
-        if (!scope) return;
-        const valueNodes = row.querySelectorAll(".font-headline-sm");
-        const labelNode = row.querySelector(".font-body-sm");
-        const monoNodes = Array.from(row.querySelectorAll("span")).filter((node) => node.className.includes("font-data-mono"));
-        const total = payload.scopes.reduce((sum, item) => sum + Number(item.tco2e || 0), 0);
-        const share = total ? (Number(scope.tco2e) / total) * 100 : 0;
-        if (labelNode) labelNode.textContent = scope.label.split(":")[0] + ": " + scope.label.split(":").slice(1).join(":").trim();
-        if (monoNodes[0]) monoNodes[0].textContent = `${formatNumber(share, 1)}% of included total`;
-        if (valueNodes[0]) valueNodes[0].textContent = `${formatNumber(share, 1)}%`;
-        if (monoNodes[1]) monoNodes[1].textContent = `${formatNumber(scope.tco2e, 1)} tCO₂e`;
-      });
-      const donutSection = Array.from(document.querySelectorAll("section")).find((section) =>
-        section.querySelector("h2")?.textContent.includes("GHG Scope Partitioning"));
-      const donutCircles = Array.from(donutSection?.querySelectorAll("svg circle") || []).slice(1);
-      const donutOrder = [2, 1, 0];
-      const circumference = 2 * Math.PI * 62;
-      const scopeTotal = (payload.scopes || []).reduce((sum, item) => sum + Number(item.tco2e || 0), 0);
-      let dashOffset = 0;
-      donutCircles.forEach((circle, index) => {
-        const scope = payload.scopes?.[donutOrder[index]];
-        if (!scope || !scopeTotal) return;
-        const arc = circumference * Number(scope.tco2e) / scopeTotal;
-        circle.setAttribute("stroke-dasharray", `${arc} ${circumference - arc}`);
-        circle.setAttribute("stroke-dashoffset", String(-dashOffset));
-        dashOffset += arc;
-      });
-
-      const runInfo = document.getElementById("lastRun");
-      if (runInfo) runInfo.textContent = `LAST RUN ${payload.last_run}`;
-      renderTrajectory(payload);
-    }
-
-    async function refresh(forceRun = false) {
-      const selectedOrg = orgSelect?.value || orgOptions[0];
-      const selectedCountry = countrySelect?.value || "India";
-      const period = years();
-      const query = new URLSearchParams({ org_name: selectedOrg, country: selectedCountry, ...period });
-      if (runButton) runButton.disabled = true;
-      if (runLabel) runLabel.textContent = "RUNNING PIPELINE…";
-      try {
-        let response;
-        if (activeCsv) {
-          response = await fetch(`/api/run-csv?${query}`, {
-            method: "POST",
-            headers: { "Content-Type": "text/csv" },
-            body: activeCsv,
-          });
-        } else if (forceRun) {
-          response = await fetch(`/api/run?${query}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ org_name: selectedOrg, country: selectedCountry, ...period }) });
-        } else {
-          response = await fetch(`/api/run?${query}`);
-        }
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.detail || "Pipeline request failed.");
-        hydrate(payload);
-        const errorBanner = document.getElementById("errorBanner");
-        if (errorBanner) errorBanner.remove();
-        if (runLabel) runLabel.textContent = "EXPLORE & REFRESH";
-      } catch (error) {
-        let banner = document.getElementById("errorBanner");
-        if (!banner) {
-          banner = document.createElement("div");
-          banner.id = "errorBanner";
-          banner.className = "mx-margin-mobile mb-3 rounded-lg bg-error-container p-3 text-on-error-container text-sm";
-          document.querySelector("main")?.prepend(banner);
-        }
-        banner.textContent = error.message || "Could not load CarbonTrace data.";
-        if (runLabel) runLabel.textContent = "RETRY PIPELINE";
-      } finally {
-        if (runButton) runButton.disabled = false;
-      }
-    }
-
-    startSlider?.addEventListener("input", updateRange);
-    slider?.addEventListener("input", updateRange);
-    startSlider?.addEventListener("change", () => refresh(false));
-    slider?.addEventListener("change", () => refresh(false));
-    document.querySelectorAll("button").forEach((button) => {
-      const text = button.textContent.trim();
-      const period = button.classList.contains("range-shortcut")
-        ? [Number(button.dataset.startYear), Number(button.dataset.endYear)]
-        : null;
-      if (!period) return;
-      button.addEventListener("click", () => {
-        slider.min = String(period[0] + 1);
-        startSlider.max = String(period[1] - 1);
-        startSlider.value = String(period[0]);
-        slider.value = String(period[1]);
-        updateRange();
-        refresh();
-      });
-    });
-    orgSelect?.addEventListener("change", refresh);
-    countrySelect?.addEventListener("change", refresh);
-    runButton?.addEventListener("click", () => refresh(true));
-    csvZone?.addEventListener("click", (event) => {
-      if (event.target !== csvInput) csvInput.click();
-    });
-    csvInput.addEventListener("click", (event) => event.stopPropagation());
-    csvInput.addEventListener("change", () => {
-      activeCsv = csvInput.files?.[0] || null;
-      const filename = csvZone?.querySelector("span.font-data-mono");
-      if (filename) filename.textContent = activeCsv ? activeCsv.name : "No file selected";
-    });
-
-    const actionButtons = Array.from(document.querySelectorAll("button"));
-    actionButtons.find((button) => button.textContent.includes("EXPORT PDF"))?.addEventListener("click", () => {
-      if (!latestPayload?.report) return;
-      const blob = new Blob([latestPayload.report], { type: "text/markdown;charset=utf-8" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "CarbonTrace_Report.md";
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-    actionButtons.find((button) => button.textContent.includes("AUDIT LOG"))?.addEventListener("click", () => {
-      if (!latestPayload) return;
-      const blob = new Blob([JSON.stringify({ data_quality: latestPayload.data_quality, agent_logs: latestPayload.agent_logs }, null, 2)], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "CarbonTrace_Audit_Log.json";
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-
-    const navTargets = {
-      overview: null,
-      "carbon-ledger": "scope-section",
-      "industry-benchmark": "trajectory-section",
-      "esg-journal": "report-section",
-    };
-    const pageSections = document.querySelectorAll("main section");
-    const dashboardContent = document.querySelector("main > div");
-    if (dashboardContent) {
-      dashboardContent.style.maxWidth = "1080px";
-      dashboardContent.style.marginInline = "auto";
-    }
-    pageSections[1]?.setAttribute("id", "dashboard-controls");
-    pageSections[3]?.setAttribute("id", "trajectory-section");
-    pageSections[4]?.setAttribute("id", "scope-section");
-    pageSections[5]?.setAttribute("id", "report-section");
-    document.querySelector("header button")?.addEventListener("click", () => {
-      document.getElementById("dashboard-controls")?.scrollIntoView({ behavior: "smooth" });
-    });
-    window.addEventListener("resize", () => {
-      const svg = document.querySelector("#trajectory-section svg");
-      const frame = svg?.parentElement;
-      if (frame) frame.style.height = `${Math.max(190, Math.min(400, frame.clientWidth / 2.35))}px`;
-    });
-    document.querySelectorAll("nav a[data-path]").forEach((link) => {
-      const target = link.dataset.path;
-      if (target === "audit-telemetry") {
-        link.addEventListener("click", (event) => {
-          event.preventDefault();
-          actionButtons.find((button) => button.textContent.includes("AUDIT LOG"))?.click();
-        });
-        return;
-      }
-      const sectionId = navTargets[target];
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (sectionId) document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-        else window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    });
-
-    updateRange();
-    refresh();
-  })();
-</script><footer class="w-full py-space-lg px-margin-mobile flex flex-col items-center justify-center mt-auto gap-1 opacity-70"><div class="w-12 h-px bg-outline-variant/30 mb-space-xs"></div><p class="font-subhead-uppercase text-[9px] tracking-[0.25em] text-on-surface-variant text-center uppercase">INNER PEACE CARBON INTELLIGENCE © 2024</p></footer></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-2xl shadow-[0_-8px_32px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-fixed scale-105 font-bold"><div class="h-20 px-gutter-mobile flex items-center justify-around"><a aria-current="page" class="flex flex-col items-center justify-center gap-1 min-w-[56px] h-12 transition-all group text-primary-fixed scale-105 font-bold" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-active:scale-90">auto_awesome</span><span class="font-label-nav text-label-nav text-center uppercase">HOME</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] h-12 text-on-surface-variant transition-all hover:text-primary group" data-path="carbon-ledger" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-active:scale-90">dataset</span><span class="font-label-nav text-label-nav text-center uppercase">LEDGER</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] h-12 text-on-surface-variant transition-all hover:text-primary group" data-path="industry-benchmark" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-active:scale-90">finance_mode</span><span class="font-label-nav text-label-nav text-center uppercase">BENCHMARK</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] h-12 text-on-surface-variant transition-all hover:text-primary group" data-path="esg-journal" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-active:scale-90">menu_book</span><span class="font-label-nav text-label-nav text-center uppercase">JOURNAL</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] h-12 text-on-surface-variant transition-all hover:text-primary group" data-path="audit-telemetry" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-active:scale-90">verified_user</span><span class="font-label-nav text-label-nav text-center uppercase">AUDIT</span></a></div></nav></body></html>
+  <!-- App Logic -->
+  <script src="/app.js"></script>
+</body>
+</html>

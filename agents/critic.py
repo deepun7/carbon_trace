@@ -45,6 +45,23 @@ def critic_agent(state: CarbonAgentState) -> dict:
     else:
         issues.append("Missing exact Scope 1/2/3 values or data provenance label.")
 
+    cin_number = metrics.get("cin_number")
+    if cin_number:
+        total_checks += 1
+        if str(cin_number) in report:
+            checks_passed += 1
+        else:
+            issues.append(f"Exact MCA CIN ({cin_number}) missing.")
+
+    for scope_number in (1, 2):
+        reported_scope = metrics.get(f"reported_scope_{scope_number}_tco2e")
+        if reported_scope is not None:
+            total_checks += 1
+            if str(reported_scope) in report:
+                checks_passed += 1
+            else:
+                issues.append(f"Exact BRSR Scope {scope_number} total ({reported_scope} tCO2e) missing.")
+
     faithfulness = round((checks_passed / total_checks) * 100.0, 1)
 
     if len(issues) == 0:

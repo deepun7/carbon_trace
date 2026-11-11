@@ -14,6 +14,8 @@ def calculation_agent(state: CarbonAgentState) -> dict:
     org_records = state.get("org_activity_records", [])
     owid_records = state.get("owid_benchmark_records", [])
     org_name = state.get("org_name", "Apex Manufacturing Pvt Ltd")
+    corporate_metadata = state.get("corporate_metadata", {})
+    brsr_reported_data = state.get("brsr_reported_data", {})
     entity = state["target_entity"]
     logs = list(state.get("agent_logs", []))
 
@@ -132,6 +134,26 @@ def calculation_agent(state: CarbonAgentState) -> dict:
     computed_metrics = {
         "org_name": org_name,
         "data_provenance": provenance,
+        "cin_number": corporate_metadata.get("cin_number") or brsr_reported_data.get("cin_number"),
+        "company_name": brsr_reported_data.get("company_name") or org_name,
+        "bse_code": corporate_metadata.get("bse_code"),
+        "nse_symbol": corporate_metadata.get("nse_symbol"),
+        "filing_section": brsr_reported_data.get("filing_section", corporate_metadata.get("filing_section")),
+        "financial_year": brsr_reported_data.get("financial_year", "FY 2022-23"),
+        "document_format": brsr_reported_data.get("document_format", "NATIVE_DIGITAL_TEXT"),
+        "pages_scanned": brsr_reported_data.get("pages_scanned", 1),
+        "extraction_engine": brsr_reported_data.get("extraction_engine", "pdfplumber+pypdf"),
+        "brsr_source": corporate_metadata.get("source"),
+        "brsr_data_provenance": corporate_metadata.get("data_provenance") or brsr_reported_data.get("data_provenance"),
+        "reported_scope_1_tco2e": brsr_reported_data.get("reported_scope_1_tco2e"),
+        "reported_scope_2_tco2e": brsr_reported_data.get("reported_scope_2_tco2e"),
+        "reported_scope_3_tco2e": brsr_reported_data.get("reported_scope_3_tco2e"),
+        "total_extracted_footprint_tco2e": brsr_reported_data.get("total_extracted_footprint_tco2e"),
+        "disclosures_matrix": brsr_reported_data.get("disclosures_matrix", []),
+        "energy_consumption_value": brsr_reported_data.get("energy_consumption_value"),
+        "energy_consumption_unit": brsr_reported_data.get("energy_consumption_unit"),
+        "energy_consumption_gj": brsr_reported_data.get("energy_consumption_gj"),
+        "energy_consumption_kwh": brsr_reported_data.get("energy_consumption_kwh"),
         "facilities_aggregated": fac_count,
         "benchmark_country": entity,
         "start_year": int(merged.iloc[0]["year"]),
@@ -148,6 +170,16 @@ def calculation_agent(state: CarbonAgentState) -> dict:
         "grid_ef_kg_per_kwh": grid_ef_val,
         "grid_ef_source": grid_entry["source"]
     }
+    for scope_number, computed_scope in (
+        (1, float(latest["scope_1_tco2e"])),
+        (2, float(latest["scope_2_tco2e"])),
+        (3, float(latest["scope_3_tco2e"])),
+    ):
+        reported_scope = computed_metrics.get(f"reported_scope_{scope_number}_tco2e")
+        variance = computed_scope - float(reported_scope) if reported_scope is not None else None
+        computed_metrics[f"scope_{scope_number}_reconciliation_variance_tco2e"] = (
+            round(variance, 2) if variance is not None else None
+        )
 
     export_cols = [
         "org_id", "year", "scope_1_tco2e", "scope_2_tco2e", "scope_3_tco2e",

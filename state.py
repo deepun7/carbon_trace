@@ -6,6 +6,8 @@ class CarbonAgentState(TypedDict):
     start_year: int
     end_year: int
     data_source_path: Optional[str]
+    cin_number: Optional[str]
+    brsr_pdf_path: Optional[str]
     use_llm_narrative: bool
 
     # Agent 1: Ingestion
@@ -13,6 +15,8 @@ class CarbonAgentState(TypedDict):
     owid_benchmark_records: List[Dict[str, Any]]
     data_quality_report: Dict[str, Any]
     ingestion_status: str
+    corporate_metadata: Dict[str, Any]
+    brsr_reported_data: Dict[str, Any]
 
     # Agent 2: Calculation
     computed_metrics: Dict[str, Any]

@@ -3,6 +3,7 @@ import json
 import time
 import sqlite3
 import argparse
+import sys
 from datetime import datetime, timezone
 from langgraph.graph import StateGraph, END
 from state import CarbonAgentState
@@ -11,6 +12,7 @@ from agents.calculation import calculation_agent
 from agents.ml_engine import ml_engine_agent
 from agents.reporting import reporting_agent
 from agents.critic import critic_agent
+from agents.brsr_extractor import lookup_cin_metadata
 
 RUN_LEDGER_DB = os.path.join("data", "pipeline_runs_ledger.db")
 
@@ -157,7 +159,9 @@ def run_pipeline(
     org_name: str = "Apex Manufacturing Pvt Ltd",
     data_source_path: str = None,
     use_llm_narrative: bool = False,
-    save_report_path: str = os.path.join("reports", "sample_generated_report.md")
+    save_report_path: str = os.path.join("reports", "sample_generated_report.md"),
+    cin_number: str = None,
+    brsr_pdf_path: str = None,
 ) -> CarbonAgentState:
     validate_cli_parameters(start_year, end_year, interval_minutes=60)
     app = build_carbontrace_graph()
@@ -167,11 +171,15 @@ def run_pipeline(
         "start_year": start_year,
         "end_year": end_year,
         "data_source_path": data_source_path,
+        "cin_number": cin_number,
+        "brsr_pdf_path": brsr_pdf_path,
         "use_llm_narrative": use_llm_narrative,
         "org_activity_records": [],
         "owid_benchmark_records": [],
         "data_quality_report": {},
         "ingestion_status": "PENDING",
+        "corporate_metadata": {},
+        "brsr_reported_data": {},
         "computed_metrics": {},
         "scope_breakdown": {},
         "emission_factors_audit": {},
@@ -202,8 +210,11 @@ def run_pipeline(
     return final_state
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="CarbonTrace Multi-Agent Prototype Pipeline & Scheduler")
-    parser.add_argument("--org", type=str, default="Apex Manufacturing Pvt Ltd", help="Organization Name")
+    parser.add_argument("--org", type=str, default=None, help="Organization Name")
+    parser.add_argument("--cin", type=str, default=None, help="21-character MCA Corporate Identification Number")
+    parser.add_argument("--brsr-pdf", type=str, default=None, help="Path to a BRSR PDF filing")
     parser.add_argument("--country", type=str, default="India", help="OWID Benchmark Country")
     parser.add_argument("--start", type=int, default=2000, help="Start Year")
     parser.add_argument("--end", type=int, default=2023, help="End Year")
@@ -214,13 +225,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     validate_cli_parameters(args.start, args.end, args.interval_minutes)
+    if args.cin and not args.org:
+        args.org = lookup_cin_metadata(args.cin)["org_name"]
+    args.org = args.org or "Apex Manufacturing Pvt Ltd"
 
     if args.schedule:
         print(f"⏱️ Starting Periodic CarbonTrace Scheduler (Interval: {args.interval_minutes}m)...")
         while True:
             for attempt in range(1, 4):
                 try:
-                    state = run_pipeline(args.country, args.start, args.end, args.org, args.csv, args.use_llm)
+                    state = run_pipeline(
+                        entity=args.country, start_year=args.start, end_year=args.end,
+                        org_name=args.org, data_source_path=args.csv,
+                        use_llm_narrative=args.use_llm, cin_number=args.cin,
+                        brsr_pdf_path=args.brsr_pdf
+                    )
                     print(f"[{state.get('_last_run_timestamp_utc')}] ✅ Run Completed for {args.org} (Critic Approved: {state['critic_approved']})")
                     break
                 except Exception as exc:
@@ -229,7 +248,12 @@ if __name__ == "__main__":
                     time.sleep(wait_sec)
             time.sleep(args.interval_minutes * 60)
     else:
-        state = run_pipeline(args.country, args.start, args.end, args.org, args.csv, args.use_llm)
+        state = run_pipeline(
+            entity=args.country, start_year=args.start, end_year=args.end,
+            org_name=args.org, data_source_path=args.csv,
+            use_llm_narrative=args.use_llm, cin_number=args.cin,
+            brsr_pdf_path=args.brsr_pdf
+        )
         for log in state["agent_logs"]:
             print(log)
         print(f"\n✅ Deliverable Saved: 'reports/sample_generated_report.md' | Timestamp: {state.get('_last_run_timestamp_utc')}")
