@@ -34,25 +34,15 @@ CarbonTrace is a 5-agent LangGraph prototype that automates organizational green
 Start the unified API and responsive Luxury Editorial dashboard (featuring Mocha Brown, Champagne Gold, and Burnt Amber theme with full MCA CIN & BRSR Principle 6 controls):
 
 ```bash
-python -m uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+python -m uvicorn api:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Open `http://localhost:8000`. The frontend provides:
-- Live company selector across verified listed entities (`Reliance Industries Limited`, `NTPC Limited`, `Tata Steel Limited`) and demo baselines (`Apex Manufacturing Pvt Ltd`, `GreenGrid Logistics Corp`).
+- Live company selector across verified listed entities (`ITC Limited`, `Reliance Industries Limited`, `NTPC Limited`, `Tata Steel Limited`, `HCL Technologies Limited`, `Infosys Limited`, `Tata Consultancy Services Limited`, `Wipro Limited`) and demo baselines (`Apex Manufacturing Pvt Ltd`, `GreenGrid Logistics Corp`).
 - Corporate Regulatory Panel displaying 21-character MCA CIN, BSE Scrip Code, NSE Symbol, and `Section E / C: Principle 6` filing status.
-- BRSR Scope 1 & Scope 2 Reconciliation Matrix and Energy Consumption disclosures.
-- Drag-and-drop support for Activity Telemetry CSV and annual BRSR Filing PDF reports.
-- REST API endpoints: `/api/health`, `/api/organizations`, `/api/run`, `/api/run-csv`, and `/api/run-brsr`.
-
-### 2. Tactical Cockpit Streamlit Application (Port 8501)
-
-Launch the tactical engineering view:
-
-```bash
-python -m streamlit run app.py --server.port 8501
-```
-
-Open `http://localhost:8501`. Features include interactive walk-forward forecast bands, anomaly outlier tracking, and full BRSR Principle 6 reconciliation tables in Tab 4.
+- BRSR Scope 1, Scope 2, and Scope 3 Reconciliation Matrix and Energy Consumption disclosures.
+- Drag-and-drop support for Activity Telemetry CSV and annual BRSR Filing PDF reports with dual-engine OCR fallback.
+- REST API endpoints: `/api/health`, `/api/companies`, `/api/run`, `/api/run-csv`, and `/api/upload-brsr-pdf`.
 
 ---
 
