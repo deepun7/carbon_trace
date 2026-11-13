@@ -49,7 +49,7 @@ COUNTRIES = [
     "World",
 ]
 
-app = FastAPI(title="CarbonTrace", version="4.0.0", description="Indian Corporate Regulatory Carbon Intelligence Platform")
+app = FastAPI(title="CarbonTrace", version="4.1.0", description="Indian Corporate Regulatory Carbon Intelligence Platform")
 
 if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
@@ -266,7 +266,7 @@ def get_plotly_js() -> FileResponse:
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "CarbonTrace", "version": "4.0.0"}
+    return {"status": "ok", "service": "CarbonTrace", "version": "4.1.0"}
 
 
 @app.get("/api/companies")
