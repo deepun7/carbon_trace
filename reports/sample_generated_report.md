@@ -1,13 +1,13 @@
 # Automated Organizational Carbon Footprint & OWID Benchmark Report — ITC Limited
 
-> **Data Provenance & Boundary Notice:** Organization activity records in this prototype report are **VERIFIED_BRSR_FILING** data (`SQLITE_DEMO_DB (enterprise_telemetry.db)`), aggregated across **1 facilities** for **ITC Limited**. Estimates reflect **included activity categories only** (stationary diesel/natural gas, diesel fleet, purchased grid electricity, business flights, and HGV road freight), not a complete corporate inventory. National macro benchmark data is sourced from the **Our World in Data (OWID) CO2 Dataset** for **India**.
+> **Data Provenance & Boundary Notice:** Organization activity records in this prototype report are **SYNTHETIC_DEMO** data (`SQLITE_DEMO_DB (enterprise_telemetry.db)`), aggregated across **1 facilities** for **ITC Limited**. Estimates reflect **included activity categories only** (stationary diesel/natural gas, diesel fleet, purchased grid electricity, business flights, and HGV road freight), not a complete corporate inventory. National macro benchmark data is sourced from the **Our World in Data (OWID) CO2 Dataset** for **India**.
 
 ## 1. Executive Summary & Corporate Carbon Trajectory
 Between **2000** and **2025**, **ITC Limited** recorded a starting organizational footprint (across included categories) of **2438.21 tCO2e** and a latest annual footprint of **4613.8 tCO2e**, representing a net change of **89.23%** and a compound annual growth rate (CAGR) of **2.58%**. Cumulative emissions across the period totaled **90012.57 tCO2e**.
 
 | Metric Category | Organizational Value (ITC Limited) | National OWID Benchmark (India) |
 | :--- | :--- | :--- |
-| **Data Provenance & Boundary** | **VERIFIED_BRSR_FILING (1 Facilities, Included Categories)** | **OWID National Macro Dataset** |
+| **Data Provenance & Boundary** | **SYNTHETIC_DEMO (1 Facilities, Included Categories)** | **OWID National Macro Dataset** |
 | **Latest Annual Emissions (2025)** | **4613.8 tCO2e** | **3203.406 Mt CO2** |
 | **Net Trajectory Change (2000–2025)** | **89.23%** | **233.75%** |
 | **Compound Annual Growth Rate (CAGR)** | **2.58%** | **4.94%** |
@@ -32,9 +32,9 @@ Facility-level operational inputs were aggregated by `(org_id, year)` and conver
 - **BSE Code:** 500875
 - **NSE Symbol:** ITC
 - **Filing section:** Section E: Principle 6
-- **BRSR metadata provenance:** VERIFIED_BRSR_FILING
+- **BRSR metadata provenance:** SYNTHETIC_DEMO
 - **BRSR source:** Report and Accounts / BRSR — Section C: Principle 6 (Assurance: KPMG ISAE 3000)
-- **Operational activity provenance:** VERIFIED_BRSR_FILING (generated demo activity is not a reported BRSR value)
+- **Operational activity provenance:** SYNTHETIC_DEMO (generated demo activity is not a reported BRSR value)
 - **Document format & extraction engine:** NATIVE_DIGITAL_TEXT (54 pages, pdfplumber+pypdf)
 - **Reported energy consumption:** 24025.0 TJ (6673616450.0 kWh)
 - **Reported Scope 1 (BRSR):** 1045000.0 tCO2e; activity-based variance: -1044023.06 tCO2e
@@ -47,11 +47,11 @@ National territorial emissions for **India** from the Our World in Data (OWID) d
 
 ## 5. Walk-Forward Forecast (2026–2032) vs Baseline & Anomaly Method Agreement
 
-> ✔️ **Baseline Comparison Note:** Ridge Walk-Forward RMSE (298.17 tCO2e) outperformed Naive Persistence Baseline RMSE (357.13 tCO2e) by 16.51%.
+> ✔️ **Baseline Comparison Note:** Ridge Walk-Forward RMSE (298.78 tCO2e) outperformed Naive Persistence Baseline RMSE (357.13 tCO2e) by 16.34%.
 
 - **Walk-Forward Evaluation Window:** **2015–2025** (**11** expanding one-step-ahead test folds).
-- **Primary Model (Autoregressive Ridge (Walk-Forward CV)):** **RMSE = 298.17 tCO2e**, **MAE = 191.54 tCO2e**, **MAPE = 5.08%**, **Out-of-Sample R² (Variance Explained vs Mean Baseline, NOT Accuracy) = 0.2669**.
-- **Baseline Comparison (Naive Persistence Baseline (y_t = y_{t-1})):** **Naive RMSE = 357.13 tCO2e**, **Naive MAE = 247.63 tCO2e**, **Naive MAPE = 6.45%** (RMSE Skill vs Baseline: **16.51%**).
+- **Primary Model (Autoregressive Ridge (Walk-Forward CV)):** **RMSE = 298.78 tCO2e**, **MAE = 192.71 tCO2e**, **MAPE = 5.1%**, **Out-of-Sample R² (Variance Explained vs Mean Baseline, NOT Accuracy) = 0.2639**.
+- **Baseline Comparison (Naive Persistence Baseline (y_t = y_{t-1})):** **Naive RMSE = 357.13 tCO2e**, **Naive MAE = 247.63 tCO2e**, **Naive MAPE = 6.45%** (RMSE Skill vs Baseline: **16.34%**).
 - **Anomaly Method Agreement (Isolation Forest vs Parametric Z-Score (Inter-Method Agreement)):** **Agreement F1 = 1.0** (Precision: `1.0`, Recall: `1.0`). *Note: This measures agreement between two unsupervised methods (Isolation Forest vs Z-Score), not ground-truth accuracy.*
 - **Optional Exploratory Scope Pattern Grouping:** Exploratory K-Means Scope Pattern Grouping (k=3) Silhouette Score = **0.5416**.
 
@@ -66,13 +66,13 @@ National territorial emissions for **India** from the Our World in Data (OWID) d
 *Note: Projections from limited annual observations are illustrative trend extrapolations. The error band (`±1.96 × Walk-Forward RMSE × √step`) is an approximate heuristic error band, not a formally calibrated 95% prediction interval.*
 | Year | Projected Footprint | Approximate Error Band (±1.96 × RMSE × √step) |
 | :--- | :--- | :--- |
-| 2026 | 4609.52 tCO2e | 4025.1 – 5193.94 tCO2e |
-| 2027 | 4666.39 tCO2e | 3839.9 – 5492.88 tCO2e |
-| 2028 | 4741.22 tCO2e | 3728.97 – 5753.46 tCO2e |
-| 2029 | 4821.32 tCO2e | 3652.48 – 5990.16 tCO2e |
-| 2030 | 4902.97 tCO2e | 3596.17 – 6209.77 tCO2e |
-| 2031 | 4985.07 tCO2e | 3553.54 – 6416.6 tCO2e |
-| 2032 | 5067.3 tCO2e | 3521.08 – 6613.53 tCO2e |
+| 2026 | 4608.96 tCO2e | 4023.36 – 5194.56 tCO2e |
+| 2027 | 4666.29 tCO2e | 3838.12 – 5494.46 tCO2e |
+| 2028 | 4741.4 tCO2e | 3727.11 – 5755.7 tCO2e |
+| 2029 | 4821.61 tCO2e | 3650.4 – 5992.81 tCO2e |
+| 2030 | 4903.27 tCO2e | 3593.82 – 6212.72 tCO2e |
+| 2031 | 4985.34 tCO2e | 3550.92 – 6419.77 tCO2e |
+| 2032 | 5067.54 tCO2e | 3518.18 – 6616.9 tCO2e |
 
 ## 6. Automated Decarbonization Roadmap & Scope Abatement Actions
 1. **Scope 2 Renewable Electricity Procurement:** Transitioning purchased facility electricity (`3078.62 tCO2e`) to renewable PPAs reduces location-based grid exposure (`0.716 kg CO2e/kWh`).

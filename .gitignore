@@ -2,3 +2,9 @@
 __pycache__/
 *.pyc
 data/
+
+# Manual PDFs excluded from repository
+[Cc]arbon[Tt]race_[Mm]aster_[Mm]anual*.pdf
+[Cc]arbon[Tt]race_[Tt]echnical_[Mm]anual*.pdf
+*manual*.pdf
+*Manual*.pdf

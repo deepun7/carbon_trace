@@ -22,7 +22,7 @@ def critic_agent(state: CarbonAgentState) -> dict:
     end_org_str = str(metrics.get("end_org_tco2e", ""))
     org_change_str = str(metrics.get("org_net_change_pct", ""))
     owid_end_str = str(metrics.get("owid_national_end_co2_mt", ""))
-    provenance_str = str(metrics.get("data_provenance", "SIMULATED_DEMO"))
+    provenance_str = str(metrics.get("data_provenance", "SYNTHETIC_DEMO"))
 
     if end_org_str and end_org_str in report:
         checks_passed += 1

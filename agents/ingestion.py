@@ -216,11 +216,11 @@ def ingestion_agent(state: CarbonAgentState) -> dict:
                         "purchased_electricity_kwh": round(elec_kwh * scale, 2),
                         "business_air_travel_pkm": round(flight_pkm * scale, 2),
                         "supply_chain_freight_ton_km": round(freight_tkm * scale, 2),
-                        "data_provenance": "VERIFIED_BRSR_FILING"
+                        "data_provenance": "SYNTHETIC_DEMO"
                     })
                 org_df = pd.DataFrame(synth_records)
                 org_source = f"BRSR_PARSER ({os.path.basename(brsr_pdf_path) if brsr_pdf_path else 'SYNTH_MODEL'})"
-                provenance = "VERIFIED_BRSR_FILING"
+                provenance = "SYNTHETIC_DEMO"
                 fac_count = 1
                 missing_years = []
             else:

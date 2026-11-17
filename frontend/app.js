@@ -98,7 +98,7 @@
             const opt = document.createElement("option");
             opt.value = comp;
             const reg = corporateRegistry[comp];
-            const prov = reg ? reg.data_provenance : (comp.includes("Apex") || comp.includes("GreenGrid") ? "SIMULATED_DEMO" : "VERIFIED_BRSR");
+            const prov = reg && reg.data_provenance ? reg.data_provenance : "SYNTHETIC_DEMO";
             opt.textContent = `${comp} (${prov})`;
             if (comp === "ITC Limited") opt.selected = true;
             orgSelect.appendChild(opt);
@@ -129,8 +129,8 @@
     if (metaNse) metaNse.textContent = reg.nse_symbol ? `NSE: ${reg.nse_symbol}` : "Unlisted";
     if (metaAssurance) metaAssurance.textContent = reg.assurance_provider || (reg.cin_number ? "KPMG ISAE 3000" : "Self-Reported / Demo");
     if (metaProv) {
-      const isVerified = reg.data_provenance === "VERIFIED_BRSR_FILING" || Boolean(reg.cin_number);
-      metaProv.textContent = isVerified ? "VERIFIED_BRSR" : "SIMULATED_DEMO";
+      const isVerified = reg.data_provenance === "VERIFIED_BRSR_EXTRACTED";
+      metaProv.textContent = reg.data_provenance || (isVerified ? "VERIFIED_BRSR_EXTRACTED" : "SYNTHETIC_DEMO");
       metaProv.className = isVerified ? "badge-verified" : "highlight";
     }
   }
@@ -209,8 +209,8 @@
     }
 
     if (provenanceBadge) {
-      const isVerified = payload.provenance === "VERIFIED_BRSR_FILING" || Boolean(corp.cin_number);
-      provenanceBadge.textContent = isVerified ? "VERIFIED_BRSR_FILING" : "SIMULATED_DEMO";
+      const isVerified = payload.provenance === "VERIFIED_BRSR_EXTRACTED";
+      provenanceBadge.textContent = payload.provenance || "SYNTHETIC_DEMO";
       provenanceBadge.className = `badge-tag ${isVerified ? "verified" : "demo"}`;
     }
 
@@ -231,39 +231,34 @@
     const step3 = document.getElementById("step3Meta");
     const step4 = document.getElementById("step4Meta");
 
-    if (step1) step1.textContent = "MCA Registry Verified • Active";
+    if (step1) step1.textContent = corp.cin_number ? "MCA Registry Verified • Active" : "Synthetic Sandbox • Active";
     if (step2) step2.textContent = corp.cin_number ? `CIN: ${corp.cin_number}` : "Simulation Entity";
     if (step3) step3.textContent = corp.bse_code ? `BSE: ${corp.bse_code} | NSE: ${corp.nse_symbol}` : "Unlisted Filing";
     if (step4) {
-      const s1 = corp.reported_scope_1_ktco2e || 1045.0;
-      const s2 = corp.reported_scope_2_ktco2e || 170.0;
-      step4.textContent = `S1: ${formatNumber(s1, 1)}k | S2: ${formatNumber(s2, 1)}k tCO₂e`;
+      const s1 = corp.reported_scope_1_ktco2e != null ? corp.reported_scope_1_ktco2e : (corp.reported_scope_1_tco2e != null ? corp.reported_scope_1_tco2e / 1000 : null);
+      const s2 = corp.reported_scope_2_ktco2e != null ? corp.reported_scope_2_ktco2e : (corp.reported_scope_2_tco2e != null ? corp.reported_scope_2_tco2e / 1000 : null);
+      if (s1 !== null && s2 !== null) {
+        step4.textContent = `S1: ${formatNumber(s1, 1)}k | S2: ${formatNumber(s2, 1)}k tCO₂e`;
+      } else {
+        const hist = payload.history || [];
+        const lastRec = hist.length > 0 ? hist[hist.length - 1] : null;
+        if (lastRec) {
+          step4.textContent = `S1: ${formatNumber((lastRec.scope_1_tco2e || 0) / 1000, 1)}k | S2: ${formatNumber((lastRec.scope_2_tco2e || 0) / 1000, 1)}k tCO₂e`;
+        } else {
+          step4.textContent = "Telemetry Calculating";
+        }
+      }
     }
   }
 
-  // 4 Animated KPI Cards (Dynamically Scaled with Date Selection!)
+  // 4 Animated KPI Cards (100% Dynamic Computation)
   function renderKpiCards(payload) {
     const corp = payload.corporate || {};
     const metrics = payload.metrics || {};
     const period = payload.period || {};
     const endYear = period.end_year || 2025;
     const history = payload.history || [];
-
-    // Find the record for the selected endYear
     const lastRec = history.length > 0 ? history[history.length - 1] : null;
-    const baseRec2025 = history.find((h) => h.year === 2025) || (history.length > 0 ? history[history.length - 1] : null);
-
-    // Compute activity scale ratio between selected endYear and base 2025
-    let scaleRatio = 1.0;
-    if (lastRec && baseRec2025) {
-      const currVal = getRecordEmissions(lastRec);
-      const baseVal = getRecordEmissions(baseRec2025);
-      if (baseVal > 0 && currVal > 0) {
-        scaleRatio = currVal / baseVal;
-      }
-    }
-
-    const isAuditedCorporate = Boolean(corp.cin_number || (corp.reported_scope_1_tco2e && corp.reported_scope_1_tco2e > 500));
 
     let s1 = 0;
     let s2 = 0;
@@ -271,25 +266,24 @@
     let totalFootprint = 0;
     let energyTj = 0;
 
-    if (isAuditedCorporate) {
-      s1 = (corp.reported_scope_1_tco2e != null ? corp.reported_scope_1_tco2e : 0) * scaleRatio;
-      s2 = (corp.reported_scope_2_tco2e != null ? corp.reported_scope_2_tco2e : 0) * scaleRatio;
-      s3 = (corp.reported_scope_3_tco2e != null ? corp.reported_scope_3_tco2e : 0) * scaleRatio;
-      totalFootprint = (corp.total_extracted_footprint_tco2e != null ? corp.total_extracted_footprint_tco2e : (s1 + s2 + s3)) * scaleRatio;
-      energyTj = (corp.energy_consumption_value != null ? corp.energy_consumption_value : (totalFootprint * 0.0052)) * scaleRatio;
-    } else {
-      if (lastRec) {
-        s1 = Number(lastRec.scope_1_tco2e || 0);
-        s2 = Number(lastRec.scope_2_tco2e || 0);
-        s3 = Number(lastRec.scope_3_tco2e || 0);
-        totalFootprint = Number(lastRec.total_org_tco2e || metrics.end_org_tco2e || (s1 + s2 + s3));
-      } else {
-        totalFootprint = Number(metrics.end_org_tco2e || 0);
-        s1 = totalFootprint * 0.45;
-        s2 = totalFootprint * 0.45;
-        s3 = totalFootprint * 0.10;
-      }
-      energyTj = (corp.energy_consumption_value || (totalFootprint * 0.0052)) * scaleRatio;
+    if (corp.reported_scope_1_tco2e != null) {
+      s1 = Number(corp.reported_scope_1_tco2e);
+      s2 = Number(corp.reported_scope_2_tco2e || corp.scope_2_location_tco2e || 0);
+      s3 = Number(corp.reported_scope_3_tco2e || 0);
+      totalFootprint = Number(corp.total_extracted_footprint_tco2e || (s1 + s2 + s3));
+    } else if (lastRec) {
+      s1 = Number(lastRec.scope_1_tco2e || 0);
+      s2 = Number(lastRec.scope_2_tco2e || 0);
+      s3 = Number(lastRec.scope_3_tco2e || 0);
+      totalFootprint = Number(lastRec.total_org_tco2e || (s1 + s2 + s3));
+    } else if (metrics.end_org_tco2e != null) {
+      totalFootprint = Number(metrics.end_org_tco2e);
+    }
+
+    if (corp.energy_consumption_value != null) {
+      energyTj = Number(corp.energy_consumption_value);
+    } else if (lastRec && lastRec.purchased_electricity_kwh != null) {
+      energyTj = Number(lastRec.purchased_electricity_kwh) * 0.0000036;
     }
 
     // 1. Total Carbon Footprint Card
@@ -323,22 +317,30 @@
     // 3. Total Energy Consumed & Renewable %
     const kpi3Val = document.getElementById("kpi3Val");
     const kpi3Sub = document.getElementById("kpi3Sub");
-    const renewPct = corp.renewable_share_pct || 51.3;
+    const renewPct = corp.renewable_share_pct != null ? Number(corp.renewable_share_pct) : (energyTj > 0 && corp.renewable_electricity_tj ? Number(((corp.renewable_electricity_tj + (corp.renewable_fuel_tj || 0)) / energyTj * 100).toFixed(1)) : 0);
     const renewTj = energyTj * (renewPct / 100.0);
     animateCounter(kpi3Val, energyTj, "TJ", 600, true);
     if (kpi3Sub) {
-      kpi3Sub.innerHTML = `<span class="kpi-badge trend-down">${renewPct}% Clean</span> ${formatNumber(renewTj, 0)} TJ Renewable`;
+      kpi3Sub.innerHTML = renewPct > 0 
+        ? `<span class="kpi-badge trend-down">${renewPct}% Clean</span> ${formatNumber(renewTj, 0)} TJ Renewable`
+        : `<span class="kpi-badge trend-down">Calculated</span> ${formatNumber(energyTj, 1)} TJ Energy`;
     }
 
     // 4. ML Forecast & Skill
     const kpi4Val = document.getElementById("kpi4Val");
     const kpi4Sub = document.getElementById("kpi4Sub");
-    const skillPct = metrics.rmse_skill_over_naive_pct !== undefined ? metrics.rmse_skill_over_naive_pct : 7.3;
-    const rmse = metrics.ridge_rmse_tco2e || 48210.0;
-    animateCounter(kpi4Val, Math.abs(skillPct), "%", 600, true);
-    if (kpi4Sub) {
-      const isBetter = skillPct >= 0;
-      kpi4Sub.innerHTML = `<span class="kpi-badge ${isBetter ? "trend-down" : "trend-up"}">${isBetter ? "+" : ""}${formatNumber(skillPct, 1)}% vs Naive</span> RMSE ±${formatNumber(rmse / 1000, 1)}k`;
+    const skillPct = metrics.rmse_skill_over_naive_pct != null ? Number(metrics.rmse_skill_over_naive_pct) : null;
+    const rmse = metrics.ridge_rmse_tco2e != null ? Number(metrics.ridge_rmse_tco2e) : null;
+    if (skillPct !== null) {
+      animateCounter(kpi4Val, Math.abs(skillPct), "%", 600, true);
+      if (kpi4Sub) {
+        const isBetter = skillPct >= 0;
+        const rmseText = rmse !== null ? `RMSE ±${formatNumber(rmse / 1000, 1)}k` : "";
+        kpi4Sub.innerHTML = `<span class="kpi-badge ${isBetter ? "trend-down" : "trend-up"}">${isBetter ? "+" : ""}${formatNumber(skillPct, 1)}% vs Naive</span> ${rmseText}`.trim();
+      }
+    } else {
+      if (kpi4Val) kpi4Val.textContent = "—";
+      if (kpi4Sub) kpi4Sub.textContent = rmse !== null ? `RMSE ±${formatNumber(rmse / 1000, 1)}k` : "Calculating Walk-Forward";
     }
   }
 
@@ -364,7 +366,6 @@
     const forecast = payload.forecast || [];
     const anomalies = payload.anomalies || [];
     const metrics = payload.metrics || {};
-    const corp = payload.corporate || {};
 
     const chartElem = document.getElementById("trajectoryChart");
     if (!chartElem) return;
@@ -374,17 +375,8 @@
       return;
     }
 
-    const isAuditedCorporate = Boolean(corp.reported_scope_1_tco2e && corp.reported_scope_1_tco2e > 20000);
-    const baseRec2025 = history.find((h) => h.year === 2025) || (history.length > 0 ? history[history.length - 1] : null);
-    const baseVal = baseRec2025 ? getRecordEmissions(baseRec2025) : 4613.8;
-    const corpBaseTotal = Number(corp.total_extracted_footprint_tco2e || 2657000);
-
     const getHistEmissionsKt = (h) => {
-      const v = getRecordEmissions(h);
-      if (isAuditedCorporate && baseVal > 0) {
-        return (corpBaseTotal * (v / baseVal)) / 1000.0;
-      }
-      return v / 1000.0;
+      return getRecordEmissions(h) / 1000.0;
     };
 
     const histYears = history.map((h) => h.year);
@@ -409,23 +401,14 @@
     // Forecast trace
     const getFcValKt = (f) => {
       const v = Number(f.predicted_org_tco2e !== undefined ? f.predicted_org_tco2e : (f.emissions_tco2e || 0));
-      if (isAuditedCorporate && baseVal > 0) {
-        return (corpBaseTotal * (v / baseVal)) / 1000.0;
-      }
       return v / 1000.0;
     };
     const getFcUpperKt = (f) => {
-      const rawUpper = f.ci_upper_tco2e !== undefined ? Number(f.ci_upper_tco2e) : (Number(f.predicted_org_tco2e || f.emissions_tco2e || 0) * 1.08);
-      if (isAuditedCorporate && baseVal > 0) {
-        return (corpBaseTotal * (rawUpper / baseVal)) / 1000.0;
-      }
+      const rawUpper = f.ci_upper_tco2e !== undefined ? Number(f.ci_upper_tco2e) : Number(f.predicted_org_tco2e || f.emissions_tco2e || 0);
       return rawUpper / 1000.0;
     };
     const getFcLowerKt = (f) => {
-      const rawLower = f.ci_lower_tco2e !== undefined ? Number(f.ci_lower_tco2e) : (Number(f.predicted_org_tco2e || f.emissions_tco2e || 0) * 0.92);
-      if (isAuditedCorporate && baseVal > 0) {
-        return (corpBaseTotal * (rawLower / baseVal)) / 1000.0;
-      }
+      const rawLower = f.ci_lower_tco2e !== undefined ? Number(f.ci_lower_tco2e) : Number(f.predicted_org_tco2e || f.emissions_tco2e || 0);
       return rawLower / 1000.0;
     };
 
@@ -471,7 +454,7 @@
       line: { width: 0 },
       fill: "tonexty",
       fillcolor: "rgba(200, 121, 44, 0.16)",
-      name: "95% Prediction Envelope",
+      name: "Approximate Error Band",
       hoverinfo: "none",
     };
 
@@ -481,10 +464,10 @@
     const anomHover = [];
     anomalies.forEach((a) => {
       const rawVal = Number(a.org_tco2e !== undefined ? a.org_tco2e : (a.emissions_tco2e || 0));
-      const ktVal = (isAuditedCorporate && baseVal > 0) ? (corpBaseTotal * (rawVal / baseVal)) / 1000.0 : rawVal / 1000.0;
+      const ktVal = rawVal / 1000.0;
       anomYears.push(a.year);
       anomVals.push(ktVal);
-      anomHover.push(`Anomaly ${a.year}: ${formatNumber(ktVal, 1)} ktCO₂e<br>Z-Score: ${formatNumber(a.z_score || 2.4, 2)} (${a.type || a.label || "Outlier"})`);
+      anomHover.push(`Anomaly ${a.year}: ${formatNumber(ktVal, 1)} ktCO₂e<br>Z-Score: ${formatNumber(a.z_score || 0, 2)} (${a.anomaly_type || a.type || a.label || "Outlier"})`);
     });
 
     const traceAnom = {
@@ -534,36 +517,40 @@
     Plotly.newPlot(chartElem, [traceHist, traceUpper, traceLower, traceFc, traceAnom], layout, config);
 
     // Update ML Benchmark Model Cards
-    const rmseRidge = metrics.ridge_rmse_tco2e || 48210.0;
-    const rmseNaive = metrics.naive_rmse_tco2e || 52020.0;
-    const skill = metrics.rmse_skill_over_naive_pct !== undefined ? metrics.rmse_skill_over_naive_pct : 7.3;
+    const rmseRidge = metrics.ridge_rmse_tco2e != null ? Number(metrics.ridge_rmse_tco2e) : null;
+    const rmseNaive = metrics.naive_rmse_tco2e != null ? Number(metrics.naive_rmse_tco2e) : null;
+    const skill = metrics.rmse_skill_over_naive_pct != null ? Number(metrics.rmse_skill_over_naive_pct) : null;
 
     const m1Rmse = document.getElementById("m1Rmse");
     const m1Skill = document.getElementById("m1Skill");
     const m1Folds = document.getElementById("m1Folds");
 
-    if (m1Rmse) m1Rmse.textContent = `±${formatNumber(rmseRidge / 1000, 1)} ktCO₂e`;
-    if (m1Skill) m1Skill.textContent = `${skill >= 0 ? "+" : ""}${formatNumber(skill, 1)}%`;
+    if (m1Rmse) m1Rmse.textContent = rmseRidge !== null ? `±${formatNumber(rmseRidge / 1000, 1)} ktCO₂e` : "—";
+    if (m1Skill) m1Skill.textContent = skill !== null ? `${skill >= 0 ? "+" : ""}${formatNumber(skill, 1)}%` : "—";
     if (m1Folds) m1Folds.textContent = `${metrics.walk_forward_folds || 5}-Fold Expanding Window`;
 
     const m2Rmse = document.getElementById("m2Rmse");
     const m2Res = document.getElementById("m2Res");
-    if (m2Rmse) m2Rmse.textContent = `±${formatNumber((rmseRidge * 1.04) / 1000, 1)} ktCO₂e`;
-    if (m2Res) m2Res.textContent = "100 Trees (η=0.05)";
+    if (m2Rmse) m2Rmse.textContent = metrics.r2_score != null ? `R²: ${formatNumber(metrics.r2_score, 3)}` : "—";
+    if (m2Res) m2Res.textContent = metrics.agreement_f1 != null ? `Agreement F1: ${formatNumber(metrics.agreement_f1, 2)}` : "Expanding Cross-Val";
 
     const m3Rmse = document.getElementById("m3Rmse");
     const m3Baseline = document.getElementById("m3Baseline");
-    if (m3Rmse) m3Rmse.textContent = `±${formatNumber(rmseNaive / 1000, 1)} ktCO₂e`;
-    if (m3Baseline) m3Baseline.textContent = "Random Walk / Drift";
+    if (m3Rmse) m3Rmse.textContent = rmseNaive !== null ? `±${formatNumber(rmseNaive / 1000, 1)} ktCO₂e` : "—";
+    if (m3Baseline) m3Baseline.textContent = "Persistence Baseline";
 
     // Decoupling Metrics
-    const orgCagr = metrics.org_cagr_pct !== undefined ? metrics.org_cagr_pct : -1.8;
-    const nationalChange = metrics.owid_national_net_change_pct !== undefined ? metrics.owid_national_net_change_pct : 142.5;
-    const alpha = metrics.cagr_decoupling_alpha_pct !== undefined ? metrics.cagr_decoupling_alpha_pct : -144.3;
+    const orgCagr = metrics.org_cagr_pct != null ? Number(metrics.org_cagr_pct) : null;
+    const nationalChange = metrics.owid_national_net_change_pct != null ? Number(metrics.owid_national_net_change_pct) : null;
+    const alpha = metrics.cagr_decoupling_alpha_pct != null ? Number(metrics.cagr_decoupling_alpha_pct) : null;
 
     const decouplingBox = document.getElementById("decouplingMetric");
     if (decouplingBox) {
-      decouplingBox.innerHTML = `Org CAGR: <strong style="color:var(--gold-light)">${formatNumber(orgCagr, 2)}%</strong> · India National CO₂: <strong style="color:var(--amber-light)">+${formatNumber(nationalChange, 1)}%</strong> · Decoupling Alpha: <strong style="color:var(--success-emerald)">${formatNumber(alpha, 1)}%</strong>`;
+      if (orgCagr !== null && nationalChange !== null && alpha !== null) {
+        decouplingBox.innerHTML = `Org CAGR: <strong style="color:var(--gold-light)">${formatNumber(orgCagr, 2)}%</strong> · National CO₂: <strong style="color:var(--amber-light)">${nationalChange >= 0 ? "+" : ""}${formatNumber(nationalChange, 1)}%</strong> · Decoupling Alpha: <strong style="color:var(--success-emerald)">${formatNumber(alpha, 1)}%</strong>`;
+      } else {
+        decouplingBox.innerHTML = `<span style="color:var(--gold-dim)">Decoupling telemetry unavailable for current selection.</span>`;
+      }
     }
   }
 
@@ -576,7 +563,7 @@
     const lastRec = history.length > 0 ? history[history.length - 1] : null;
 
     let s1 = Number(corp.reported_scope_1_tco2e || 0);
-    let s2 = Number(corp.reported_scope_2_tco2e || 0);
+    let s2 = Number(corp.reported_scope_2_tco2e || corp.scope_2_location_tco2e || 0);
     let s3 = Number(corp.reported_scope_3_tco2e || 0);
 
     if (Array.isArray(payload.scopes) && payload.scopes.length >= 3) {
@@ -589,45 +576,44 @@
       s2 = Number(lastRec.scope_2_tco2e || 0);
       s3 = Number(lastRec.scope_3_tco2e || 0);
     }
-    if (s1 === 0 && s2 === 0 && s3 === 0) {
-      s1 = 1045000;
-      s2 = 170000;
-      s3 = 1442000;
-    }
 
     // 1. Scopes Donut Chart
     const donutElem = document.getElementById("scopesDonutChart");
     if (donutElem && typeof Plotly !== "undefined") {
-      const dataDonut = [{
-        values: [s1 / 1000, s2 / 1000, s3 / 1000],
-        labels: ["Scope 1 (Direct Fuel)", "Scope 2 (Electricity)", "Scope 3 (Value Chain)"],
-        type: "pie",
-        hole: 0.65,
-        marker: {
-          colors: ["#C8792C", "#F4D9A0", "#5B4632"],
-          line: { color: "#100B08", width: 2 },
-        },
-        textinfo: "label+percent",
-        textposition: "outside",
-        hoverinfo: "label+value+percent",
-        hovertemplate: "%{label}<br>%{value:.1f} ktCO₂e (%{percent})<extra></extra>",
-      }];
+      if (s1 === 0 && s2 === 0 && s3 === 0) {
+        donutElem.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:240px;color:var(--gold-dim);font-family:var(--font-mono);font-size:12px;text-align:center;">No Scope 1/2/3 breakdown available for this selection.</div>`;
+      } else {
+        const dataDonut = [{
+          values: [s1 / 1000, s2 / 1000, s3 / 1000],
+          labels: ["Scope 1 (Direct Fuel)", "Scope 2 (Electricity)", "Scope 3 (Value Chain)"],
+          type: "pie",
+          hole: 0.65,
+          marker: {
+            colors: ["#C8792C", "#F4D9A0", "#5B4632"],
+            line: { color: "#100B08", width: 2 },
+          },
+          textinfo: "label+percent",
+          textposition: "outside",
+          hoverinfo: "label+value+percent",
+          hovertemplate: "%{label}<br>%{value:.1f} ktCO₂e (%{percent})<extra></extra>",
+        }];
 
-      const layoutDonut = {
-        paper_bgcolor: "#100B08",
-        plot_bgcolor: "#100B08",
-        font: { family: "JetBrains Mono, sans-serif", color: "#B8A89A", size: 10 },
-        margin: { l: 20, r: 20, t: 20, b: 20 },
-        showlegend: false,
-        annotations: [{
-          font: { family: "Cormorant Garamond, serif", size: 20, color: "#F4D9A0", weight: 700 },
-          showarrow: false,
-          text: `${formatNumber((s1 + s2 + s3) / 1000, 1)}k<br><span style="font-size:10px;font-family:JetBrains Mono;color:#847568">ktCO₂e</span>`,
-          x: 0.5,
-          y: 0.5,
-        }],
-      };
-      Plotly.newPlot(donutElem, dataDonut, layoutDonut, { responsive: true, displayModeBar: false });
+        const layoutDonut = {
+          paper_bgcolor: "#100B08",
+          plot_bgcolor: "#100B08",
+          font: { family: "JetBrains Mono, sans-serif", color: "#B8A89A", size: 10 },
+          margin: { l: 20, r: 20, t: 20, b: 20 },
+          showlegend: false,
+          annotations: [{
+            font: { family: "Cormorant Garamond, serif", size: 20, color: "#F4D9A0", weight: 700 },
+            showarrow: false,
+            text: `${formatNumber((s1 + s2 + s3) / 1000, 1)}k<br><span style="font-size:10px;font-family:JetBrains Mono;color:#847568">ktCO₂e</span>`,
+            x: 0.5,
+            y: 0.5,
+          }],
+        };
+        Plotly.newPlot(donutElem, dataDonut, layoutDonut, { responsive: true, displayModeBar: false });
+      }
     }
 
     // 2. Renewable vs Non-Renewable Bar Chart
@@ -638,147 +624,145 @@
       let nonRenElec = Number(corp.non_renewable_electricity_tj || 0);
       let nonRenFuel = Number(corp.non_renewable_fuel_tj || 0);
 
-      const totalEnergy = Number(corp.energy_consumption_value || 0);
       if (renElec === 0 && renFuel === 0 && nonRenElec === 0 && nonRenFuel === 0) {
-        if (totalEnergy > 0) {
-          renElec = Math.round(totalEnergy * 0.1);
-          renFuel = Math.round(totalEnergy * 0.4);
-          nonRenElec = Math.round(totalEnergy * 0.1);
-          nonRenFuel = Math.round(totalEnergy * 0.4);
-        } else {
-          renElec = 964;
-          renFuel = 11182;
-          nonRenElec = 761;
-          nonRenFuel = 10930;
-        }
+        energyElem.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:240px;color:var(--gold-dim);font-family:var(--font-mono);font-size:12px;text-align:center;">Renewable / Non-Renewable breakdown not reported in filing.</div>`;
+      } else {
+        const traceRenew = {
+          x: ["Electricity", "Fuel / Combustion"],
+          y: [renElec, renFuel],
+          name: "Renewable Energy (TJ)",
+          type: "bar",
+          marker: { color: "#10B981" },
+          hovertemplate: "%{x} Renewable: %{y:.0f} TJ<extra></extra>",
+        };
+
+        const traceNonRenew = {
+          x: ["Electricity", "Fuel / Combustion"],
+          y: [nonRenElec, nonRenFuel],
+          name: "Non-Renewable (TJ)",
+          type: "bar",
+          marker: { color: "#C8792C" },
+          hovertemplate: "%{x} Non-Renewable: %{y:.0f} TJ<extra></extra>",
+        };
+
+        const layoutEnergy = {
+          paper_bgcolor: "#100B08",
+          plot_bgcolor: "#100B08",
+          barmode: "group",
+          font: { family: "JetBrains Mono, sans-serif", color: "#B8A89A", size: 10 },
+          margin: { l: 50, r: 20, t: 25, b: 40 },
+          legend: { orientation: "h", y: 1.15, x: 0, font: { size: 10, color: "#F4D9A0" } },
+          xaxis: { gridcolor: "rgba(244, 217, 160, 0.05)", tickfont: { color: "#847568" } },
+          yaxis: { title: "Energy (TJ)", gridcolor: "rgba(244, 217, 160, 0.05)", tickfont: { color: "#847568" } },
+        };
+        Plotly.newPlot(energyElem, [traceRenew, traceNonRenew], layoutEnergy, { responsive: true, displayModeBar: false });
       }
-
-      const traceRenew = {
-        x: ["Electricity", "Fuel / Combustion"],
-        y: [renElec, renFuel],
-        name: "Renewable Energy (TJ)",
-        type: "bar",
-        marker: { color: "#10B981" },
-        hovertemplate: "%{x} Renewable: %{y:.0f} TJ<extra></extra>",
-      };
-
-      const traceNonRenew = {
-        x: ["Electricity", "Fuel / Combustion"],
-        y: [nonRenElec, nonRenFuel],
-        name: "Non-Renewable (TJ)",
-        type: "bar",
-        marker: { color: "#C8792C" },
-        hovertemplate: "%{x} Non-Renewable: %{y:.0f} TJ<extra></extra>",
-      };
-
-      const layoutEnergy = {
-        paper_bgcolor: "#100B08",
-        plot_bgcolor: "#100B08",
-        barmode: "group",
-        font: { family: "JetBrains Mono, sans-serif", color: "#B8A89A", size: 10 },
-        margin: { l: 50, r: 20, t: 25, b: 40 },
-        legend: { orientation: "h", y: 1.15, x: 0, font: { size: 10, color: "#F4D9A0" } },
-        xaxis: { gridcolor: "rgba(244, 217, 160, 0.05)", tickfont: { color: "#847568" } },
-        yaxis: { title: "Energy (TJ)", gridcolor: "rgba(244, 217, 160, 0.05)", tickfont: { color: "#847568" } },
-      };
-      Plotly.newPlot(energyElem, [traceRenew, traceNonRenew], layoutEnergy, { responsive: true, displayModeBar: false });
     }
 
-    // 3. Official Principle 6 Table
+    // 3. Official Principle 6 Table (100% Dynamic Computation)
     const p6TableBody = document.getElementById("p6TableBody");
     if (p6TableBody) {
       const prev = corp.previous_fy_data || {};
+      const calcChange = (curr, previous) => {
+        if (curr === null || curr === undefined || previous === null || previous === undefined || Number(previous) === 0) return "—";
+        const c = Number(curr);
+        const p = Number(previous);
+        if (isNaN(c) || isNaN(p) || p === 0) return "—";
+        const diff = ((c - p) / p) * 100;
+        return `${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%`;
+      };
+
       const rows = [
         {
           param: "Total Electricity Consumed (Renewable)",
           indicator: "Essential Indicator 1 (A)",
-          curr: `${formatNumber(corp.renewable_electricity_tj || 964.0, 0)} TJ`,
-          prev: `${formatNumber(prev.renewable_electricity_tj || 980.0, 0)} TJ`,
-          change: "-1.6%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.renewable_electricity_tj != null ? `${formatNumber(corp.renewable_electricity_tj, 0)} TJ` : "—",
+          prev: prev.renewable_electricity_tj != null ? `${formatNumber(prev.renewable_electricity_tj, 0)} TJ` : "—",
+          change: calcChange(corp.renewable_electricity_tj, prev.renewable_electricity_tj),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
         },
         {
           param: "Total Fuel Consumed (Renewable Biomass)",
           indicator: "Essential Indicator 1 (B)",
-          curr: `${formatNumber(corp.renewable_fuel_tj || 11182.0, 0)} TJ`,
-          prev: `${formatNumber(prev.renewable_fuel_tj || 12454.0, 0)} TJ`,
-          change: "-10.2%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.renewable_fuel_tj != null ? `${formatNumber(corp.renewable_fuel_tj, 0)} TJ` : "—",
+          prev: prev.renewable_fuel_tj != null ? `${formatNumber(prev.renewable_fuel_tj, 0)} TJ` : "—",
+          change: calcChange(corp.renewable_fuel_tj, prev.renewable_fuel_tj),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
         },
         {
           param: "Total Electricity Consumed (Non-Renewable Grid)",
           indicator: "Essential Indicator 1 (D)",
-          curr: `${formatNumber(corp.non_renewable_electricity_tj || 761.0, 0)} TJ`,
-          prev: `${formatNumber(prev.non_renewable_electricity_tj || 785.0, 0)} TJ`,
-          change: "-3.1%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.non_renewable_electricity_tj != null ? `${formatNumber(corp.non_renewable_electricity_tj, 0)} TJ` : "—",
+          prev: prev.non_renewable_electricity_tj != null ? `${formatNumber(prev.non_renewable_electricity_tj, 0)} TJ` : "—",
+          change: calcChange(corp.non_renewable_electricity_tj, prev.non_renewable_electricity_tj),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
         },
         {
           param: "Total Fuel Consumed (Non-Renewable Coal/Gas)",
           indicator: "Essential Indicator 1 (E)",
-          curr: `${formatNumber(corp.non_renewable_fuel_tj || 10930.0, 0)} TJ`,
-          prev: `${formatNumber(prev.non_renewable_fuel_tj || 11572.0, 0)} TJ`,
-          change: "-5.5%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.non_renewable_fuel_tj != null ? `${formatNumber(corp.non_renewable_fuel_tj, 0)} TJ` : "—",
+          prev: prev.non_renewable_fuel_tj != null ? `${formatNumber(prev.non_renewable_fuel_tj, 0)} TJ` : "—",
+          change: calcChange(corp.non_renewable_fuel_tj, prev.non_renewable_fuel_tj),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
         },
         {
           param: "TOTAL ENERGY CONSUMED (A+B+C+D+E+F)",
           indicator: "Essential Indicator 1 (TOTAL)",
-          curr: `${formatNumber(corp.energy_consumption_value || 24025.0, 0)} TJ (${formatNumber((corp.energy_consumption_value || 24025.0) * 1000, 0)} GJ)`,
-          prev: `${formatNumber(prev.total_energy_value || 25791.0, 0)} TJ`,
-          change: "-6.8%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.energy_consumption_value != null ? `${formatNumber(corp.energy_consumption_value, 0)} TJ (${formatNumber(corp.energy_consumption_value * 1000, 0)} GJ)` : "—",
+          prev: prev.total_energy_value != null ? `${formatNumber(prev.total_energy_value, 0)} TJ` : "—",
+          change: calcChange(corp.energy_consumption_value, prev.total_energy_value),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
           isHighlight: true,
         },
         {
           param: "Energy Intensity per Rupee Turnover",
           indicator: "Essential Indicator 1 (Intensity)",
-          curr: `${formatNumber(corp.energy_intensity_per_turnover || 294.0, 0)} GJ / ₹ Cr`,
-          prev: `${formatNumber(prev.energy_intensity || 347.0, 0)} GJ / ₹ Cr`,
-          change: "-15.3%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.energy_intensity_per_turnover != null ? `${formatNumber(corp.energy_intensity_per_turnover, 0)} GJ / ₹ Cr` : "—",
+          prev: prev.energy_intensity != null ? `${formatNumber(prev.energy_intensity, 0)} GJ / ₹ Cr` : "—",
+          change: calcChange(corp.energy_intensity_per_turnover, prev.energy_intensity),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
         },
         {
           param: "Total Scope 1 Direct GHG Emissions",
           indicator: "Essential Indicator 7 (Scope 1)",
-          curr: `${formatNumber((corp.reported_scope_1_tco2e || s1) / 1000, 1)} kt (${Math.round(corp.reported_scope_1_tco2e || s1).toLocaleString("en-IN")} tCO₂e)`,
-          prev: `${formatNumber((prev.reported_scope_1_tco2e || 1101000) / 1000, 1)} kt`,
-          change: "-5.1%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: s1 > 0 ? `${formatNumber(s1 / 1000, 1)} kt (${Math.round(s1).toLocaleString("en-IN")} tCO₂e)` : "—",
+          prev: prev.reported_scope_1_tco2e != null ? `${formatNumber(prev.reported_scope_1_tco2e / 1000, 1)} kt` : "—",
+          change: calcChange(s1, prev.reported_scope_1_tco2e),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
           isHighlight: true,
         },
         {
           param: "Total Scope 2 Indirect GHG (Location-Based)",
           indicator: "Essential Indicator 7 (Scope 2 Loc)",
-          curr: `${formatNumber((corp.scope_2_location_tco2e || s2) / 1000, 1)} kt (${Math.round(corp.scope_2_location_tco2e || s2).toLocaleString("en-IN")} tCO₂e)`,
-          prev: `${formatNumber((prev.reported_scope_2_tco2e || 153000) / 1000, 1)} kt`,
-          change: "+11.1%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.scope_2_location_tco2e != null ? `${formatNumber(corp.scope_2_location_tco2e / 1000, 1)} kt (${Math.round(corp.scope_2_location_tco2e).toLocaleString("en-IN")} tCO₂e)` : (s2 > 0 ? `${formatNumber(s2 / 1000, 1)} kt` : "—"),
+          prev: prev.reported_scope_2_tco2e != null ? `${formatNumber(prev.reported_scope_2_tco2e / 1000, 1)} kt` : "—",
+          change: calcChange(corp.scope_2_location_tco2e || s2, prev.reported_scope_2_tco2e),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
         },
         {
           param: "Total Scope 2 Indirect GHG (Market-Based)",
           indicator: "Essential Indicator 7 (Scope 2 Mkt)",
-          curr: `${formatNumber((corp.scope_2_market_tco2e || s2) / 1000, 1)} kt (${Math.round(corp.scope_2_market_tco2e || s2).toLocaleString("en-IN")} tCO₂e)`,
-          prev: "153.0 kt",
-          change: "-1.3%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.scope_2_market_tco2e != null ? `${formatNumber(corp.scope_2_market_tco2e / 1000, 1)} kt (${Math.round(corp.scope_2_market_tco2e).toLocaleString("en-IN")} tCO₂e)` : "—",
+          prev: prev.scope_2_market_tco2e != null ? `${formatNumber(prev.scope_2_market_tco2e / 1000, 1)} kt` : "—",
+          change: calcChange(corp.scope_2_market_tco2e, prev.scope_2_market_tco2e),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
         },
         {
           param: "Total Scope 3 Value Chain Emissions",
           indicator: "Leadership Indicator 2 (Scope 3)",
-          curr: `${formatNumber((corp.reported_scope_3_tco2e || s3) / 1000, 1)} kt (${Math.round(corp.reported_scope_3_tco2e || s3).toLocaleString("en-IN")} tCO₂e)`,
-          prev: `${formatNumber((prev.reported_scope_3_tco2e || 1062000) / 1000, 1)} kt`,
-          change: "+35.8%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: s3 > 0 ? `${formatNumber(s3 / 1000, 1)} kt (${Math.round(s3).toLocaleString("en-IN")} tCO₂e)` : "—",
+          prev: prev.reported_scope_3_tco2e != null ? `${formatNumber(prev.reported_scope_3_tco2e / 1000, 1)} kt` : "—",
+          change: calcChange(s3, prev.reported_scope_3_tco2e),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
           isHighlight: true,
         },
         {
           param: "GHG Emission Intensity per Rupee Turnover",
           indicator: "Essential Indicator 7 (Intensity)",
-          curr: `${formatNumber(corp.ghg_emission_intensity_per_turnover || 14.6, 1)} tCO₂e / ₹ Cr`,
-          prev: `${formatNumber(prev.ghg_intensity || 16.9, 1)} tCO₂e / ₹ Cr`,
-          change: "-13.6%",
-          assurance: corp.assurance_provider || "KPMG ISAE 3000",
+          curr: corp.ghg_emission_intensity_per_turnover != null ? `${formatNumber(corp.ghg_emission_intensity_per_turnover, 1)} tCO₂e / ₹ Cr` : "—",
+          prev: prev.ghg_intensity != null ? `${formatNumber(prev.ghg_intensity, 1)} tCO₂e / ₹ Cr` : "—",
+          change: calcChange(corp.ghg_emission_intensity_per_turnover, prev.ghg_intensity),
+          assurance: corp.assurance_provider || "Self-Reported / Demo",
         },
       ];
 
@@ -786,7 +770,7 @@
       rows.forEach((r) => {
         const tr = document.createElement("tr");
         if (r.isHighlight) tr.style.backgroundColor = "rgba(200, 121, 44, 0.08)";
-        const changeClass = r.change.startsWith("-") ? "variance-neg" : "variance-pos";
+        const changeClass = r.change.startsWith("-") ? "variance-neg" : (r.change.startsWith("+") ? "variance-pos" : "");
         tr.innerHTML = `
           <td class="${r.isHighlight ? "highlight-col" : ""}">${r.param}</td>
           <td><span style="color:var(--gold-dim)">${r.indicator}</span></td>

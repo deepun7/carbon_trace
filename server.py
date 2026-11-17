@@ -49,7 +49,7 @@ COUNTRIES = [
     "World",
 ]
 
-app = FastAPI(title="CarbonTrace", version="4.1.0", description="Indian Corporate Regulatory Carbon Intelligence Platform")
+app = FastAPI(title="CarbonTrace", version="5.0.0", description="Indian Corporate Regulatory Carbon Intelligence Platform")
 
 if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
@@ -82,12 +82,28 @@ def _dashboard_payload(state: dict[str, Any]) -> dict[str, Any]:
     s2_val = metrics.get("reported_scope_2_tco2e") or brsr_data.get("reported_scope_2_tco2e") or reg_entry.get("reported_scope_2_tco2e")
     s3_val = metrics.get("reported_scope_3_tco2e") or brsr_data.get("reported_scope_3_tco2e") or reg_entry.get("reported_scope_3_tco2e")
 
-    # Calculate renewable percentage if available
+    # Calculate renewable percentage dynamically if energy breakdown exists
     en_total = metrics.get("energy_consumption_value") or brsr_data.get("energy_consumption_value") or reg_entry.get("energy_consumption_value") or 0.0
     en_renew = brsr_data.get("renewable_energy_tj") or 0.0
-    renew_pct = round((en_renew / en_total) * 100.0, 1) if en_total > 0 and en_renew > 0 else (
-        round((12334.0 / 24025.0) * 100.0, 1) if "itc" in str(company_name).lower() else None
+    renew_pct = round((en_renew / en_total) * 100.0, 1) if en_total > 0 and en_renew > 0 else None
+
+    # Determine provenance dynamically
+    brsr_prov = brsr_data.get("data_provenance") or metrics.get("brsr_data_provenance") or (
+        "VERIFIED_BRSR_EXTRACTED" if brsr_data.get("reported_scope_1_tco2e") is not None else "SYNTHETIC_DEMO"
     )
+    raw_prov = brsr_prov if (brsr_data.get("data_provenance") == "VERIFIED_BRSR_EXTRACTED" or metrics.get("brsr_data_provenance") == "VERIFIED_BRSR_EXTRACTED") else (metrics.get("data_provenance") or "SYNTHETIC_DEMO")
+
+    scopes_list = [
+        {"label": label, "tco2e": value}
+        for label, value in scopes.items()
+    ] if scopes else []
+    if not scopes_list:
+        if s1_val is not None:
+            scopes_list.append({"label": "Scope 1: Stationary & Fleet Combustion", "tco2e": s1_val})
+        if s2_val is not None:
+            scopes_list.append({"label": "Scope 2: Location-Based Electricity", "tco2e": s2_val})
+        if s3_val is not None:
+            scopes_list.append({"label": "Scope 3: Value Chain & Freight", "tco2e": s3_val})
 
     return {
         "ok": state.get("ingestion_status") == "SUCCESS",
@@ -97,86 +113,56 @@ def _dashboard_payload(state: dict[str, Any]) -> dict[str, Any]:
             "start_year": metrics.get("start_year", state.get("start_year")),
             "end_year": metrics.get("end_year", state.get("end_year")),
         },
-        "provenance": metrics.get("data_provenance", brsr_data.get("data_provenance", "VERIFIED_BRSR_FILING" if cin else "SIMULATED_DEMO")),
+        "provenance": raw_prov,
         "corporate": {
             "cin_number": cin,
             "company_name": company_name,
-            "bse_code": metrics.get("bse_code") or brsr_data.get("bse_code") or reg_entry.get("bse_code") or (
-                "500875" if "itc" in str(company_name).lower() else (
-                "500325" if "reliance" in str(company_name).lower() else (
-                "532555" if "ntpc" in str(company_name).lower() else (
-                "500470" if "tata" in str(company_name).lower() else (
-                "532281" if "hcl" in str(company_name).lower() else (
-                "500209" if "infosys" in str(company_name).lower() else (
-                "532540" if "tcs" in str(company_name).lower() else (
-                "507685" if "wipro" in str(company_name).lower() else ("LISTED" if cin else None)
-            )))))))),
-            "nse_symbol": metrics.get("nse_symbol") or brsr_data.get("nse_symbol") or reg_entry.get("nse_symbol") or (
-                "ITC" if "itc" in str(company_name).lower() else (
-                "RELIANCE" if "reliance" in str(company_name).lower() else (
-                "NTPC" if "ntpc" in str(company_name).lower() else (
-                "TATASTEEL" if "tata" in str(company_name).lower() else (
-                "HCLTECH" if "hcl" in str(company_name).lower() else (
-                "INFY" if "infosys" in str(company_name).lower() else (
-                "TCS" if "tcs" in str(company_name).lower() else (
-                "WIPRO" if "wipro" in str(company_name).lower() else ("LISTED" if cin else None)
-            )))))))),
-            "filing_section": metrics.get("filing_section") or brsr_data.get("filing_section", "Section C: Principle 6"),
-            "financial_year": metrics.get("financial_year") or brsr_data.get("financial_year", "FY 2025-26"),
-            "previous_financial_year": brsr_data.get("previous_financial_year", "FY 2024-25"),
-            "assurance_provider": brsr_data.get("assurance_provider") or ("KPMG Assurance and Consulting Services LLP (ISAE 3000)" if "itc" in str(company_name).lower() else "Independent Auditor (ISAE 3000)"),
+            "bse_code": metrics.get("bse_code") or brsr_data.get("bse_code") or reg_entry.get("bse_code"),
+            "nse_symbol": metrics.get("nse_symbol") or brsr_data.get("nse_symbol") or reg_entry.get("nse_symbol"),
+            "filing_section": metrics.get("filing_section") or brsr_data.get("filing_section") or reg_entry.get("filing_section") or "Section C: Principle 6",
+            "financial_year": metrics.get("financial_year") or brsr_data.get("financial_year"),
+            "previous_financial_year": brsr_data.get("previous_financial_year"),
+            "assurance_provider": brsr_data.get("assurance_provider") or reg_entry.get("assurance_provider"),
             "document_format": metrics.get("document_format") or brsr_data.get("document_format", "NATIVE_DIGITAL_TEXT"),
-            "pages_scanned": metrics.get("pages_scanned") or brsr_data.get("pages_scanned", 54 if "itc" in str(company_name).lower() else 1),
+            "pages_scanned": metrics.get("pages_scanned") or brsr_data.get("pages_scanned", 1),
             "extraction_engine": metrics.get("extraction_engine") or brsr_data.get("extraction_engine", "pdfplumber+pypdf"),
-            "brsr_provenance": metrics.get("brsr_data_provenance") or brsr_data.get("data_provenance", "VERIFIED_BRSR_FILING" if cin else "SIMULATED_DEMO"),
+            "data_provenance": brsr_prov,
+            "brsr_provenance": brsr_prov,
             "brsr_source": metrics.get("brsr_source") or brsr_data.get("source"),
             "reported_scope_1_tco2e": s1_val,
             "reported_scope_1_ktco2e": round(s1_val / 1000.0, 3) if s1_val is not None else None,
             "reported_scope_2_tco2e": s2_val,
             "reported_scope_2_ktco2e": round(s2_val / 1000.0, 3) if s2_val is not None else None,
-            "scope_2_market_tco2e": brsr_data.get("scope_2_market_tco2e") or (151000.0 if "itc" in str(company_name).lower() else s2_val),
-            "scope_2_location_tco2e": brsr_data.get("scope_2_location_tco2e") or (170000.0 if "itc" in str(company_name).lower() else s2_val),
+            "scope_2_market_tco2e": brsr_data.get("scope_2_market_tco2e"),
+            "scope_2_location_tco2e": brsr_data.get("scope_2_location_tco2e") or s2_val,
             "reported_scope_3_tco2e": s3_val,
             "reported_scope_3_ktco2e": round(s3_val / 1000.0, 3) if s3_val is not None else None,
             "total_extracted_footprint_tco2e": metrics.get("total_extracted_footprint_tco2e") or brsr_data.get("total_extracted_footprint_tco2e") or (
-                (s1_val or 0.0) + (s2_val or 0.0) + (s3_val or 0.0)
+                ((s1_val or 0.0) + (s2_val or 0.0) + (s3_val or 0.0)) if (s1_val is not None or s2_val is not None or s3_val is not None) else None
             ),
             "scope_1_reconciliation_variance_tco2e": metrics.get("scope_1_reconciliation_variance_tco2e"),
             "scope_2_reconciliation_variance_tco2e": metrics.get("scope_2_reconciliation_variance_tco2e"),
             "scope_3_reconciliation_variance_tco2e": metrics.get("scope_3_reconciliation_variance_tco2e"),
-            "energy_consumption_value": en_total,
-            "energy_consumption_unit": metrics.get("energy_consumption_unit") or brsr_data.get("energy_consumption_unit", "TJ"),
+            "energy_consumption_value": en_total if en_total > 0 else None,
+            "energy_consumption_unit": metrics.get("energy_consumption_unit") or brsr_data.get("energy_consumption_unit"),
             "energy_consumption_gj": metrics.get("energy_consumption_gj") or brsr_data.get("energy_consumption_gj"),
             "energy_consumption_kwh": metrics.get("energy_consumption_kwh") or brsr_data.get("energy_consumption_kwh"),
-            "renewable_energy_tj": brsr_data.get("renewable_energy_tj") or (12334.0 if "itc" in str(company_name).lower() else None),
-            "non_renewable_energy_tj": brsr_data.get("non_renewable_energy_tj") or (11691.0 if "itc" in str(company_name).lower() else None),
-            "renewable_electricity_tj": brsr_data.get("renewable_electricity_tj") or (964.0 if "itc" in str(company_name).lower() else None),
-            "renewable_fuel_tj": brsr_data.get("renewable_fuel_tj") or (11182.0 if "itc" in str(company_name).lower() else None),
-            "non_renewable_electricity_tj": brsr_data.get("non_renewable_electricity_tj") or (761.0 if "itc" in str(company_name).lower() else None),
-            "non_renewable_fuel_tj": brsr_data.get("non_renewable_fuel_tj") or (10930.0 if "itc" in str(company_name).lower() else None),
+            "renewable_energy_tj": brsr_data.get("renewable_energy_tj"),
+            "non_renewable_energy_tj": brsr_data.get("non_renewable_energy_tj"),
+            "renewable_electricity_tj": brsr_data.get("renewable_electricity_tj"),
+            "renewable_fuel_tj": brsr_data.get("renewable_fuel_tj"),
+            "non_renewable_electricity_tj": brsr_data.get("non_renewable_electricity_tj"),
+            "non_renewable_fuel_tj": brsr_data.get("non_renewable_fuel_tj"),
             "renewable_share_pct": renew_pct,
-            "energy_intensity_per_turnover": brsr_data.get("energy_intensity_per_turnover_gj_per_crore") or (294.0 if "itc" in str(company_name).lower() else None),
-            "ghg_emission_intensity_per_turnover": brsr_data.get("ghg_emission_intensity_tco2e_per_crore") or (14.6 if "itc" in str(company_name).lower() else None),
+            "energy_intensity_per_turnover": brsr_data.get("energy_intensity_per_turnover_gj_per_crore"),
+            "ghg_emission_intensity_per_turnover": brsr_data.get("ghg_emission_intensity_tco2e_per_crore"),
             "disclosures_matrix": metrics.get("disclosures_matrix") or brsr_data.get("disclosures_matrix", []),
-            "previous_fy_data": brsr_data.get("previous_fy_data") or ({
-                "financial_year": "FY 2024-25",
-                "reported_scope_1_tco2e": 1101000.0,
-                "reported_scope_1_ktco2e": 1101.0,
-                "reported_scope_2_tco2e": 153000.0,
-                "reported_scope_2_ktco2e": 153.0,
-                "reported_scope_3_tco2e": 1062000.0,
-                "reported_scope_3_ktco2e": 1062.0,
-                "total_energy_value": 25791.0,
-                "renewable_energy_tj": 13434.0,
-                "non_renewable_energy_tj": 12357.0,
-                "energy_intensity": 347.0,
-                "ghg_intensity": 16.9
-            } if "itc" in str(company_name).lower() else {}),
+            "previous_fy_data": brsr_data.get("previous_fy_data") or {},
         },
         "regulatory_stepper": {
             "step1_mca": True,
             "step2_cin": bool(cin),
-            "step3_filing": True,
+            "step3_filing": bool(cin or s1_val is not None),
             "step4_principle6": bool(s1_val is not None or en_total > 0),
         },
         "last_run": state.get("_last_run_timestamp_utc", "Live Synced"),
@@ -200,14 +186,7 @@ def _dashboard_payload(state: dict[str, Any]) -> dict[str, Any]:
             "forecast_horizon": ml_metrics.get("forecast_horizon_label", "2026–2032"),
             "forecast_status": ml_metrics.get("status", "COMPLETED"),
         },
-        "scopes": [
-            {"label": label, "tco2e": value}
-            for label, value in scopes.items()
-        ] if scopes else [
-            {"label": "Scope 1: Stationary & Fleet Combustion", "tco2e": s1_val or 1045000.0},
-            {"label": "Scope 2: Location-Based Electricity", "tco2e": s2_val or 170000.0},
-            {"label": "Scope 3: Value Chain & Freight", "tco2e": s3_val or 1442000.0},
-        ],
+        "scopes": scopes_list,
         "history": state.get("annual_emissions_records", []),
         "forecast": state.get("forecast_records", []),
         "anomalies": state.get("anomalies_detected", []),
@@ -266,7 +245,7 @@ def get_plotly_js() -> FileResponse:
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "CarbonTrace", "version": "4.1.0"}
+    return {"status": "ok", "service": "CarbonTrace", "version": "5.0.0"}
 
 
 @app.get("/api/companies")

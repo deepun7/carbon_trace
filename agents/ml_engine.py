@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -10,6 +11,35 @@ from sklearn.metrics import (
     precision_score, recall_score, f1_score, silhouette_score
 )
 from state import CarbonAgentState
+
+
+def predict_walk_forward_fold(records: list[dict], fold_index: int) -> dict[str, Any]:
+    """Predict a single walk-forward fold strictly without look-ahead leakage.
+    
+    Slices train_series = series[:fold_index] BEFORE constructing lag features or
+    fitting scalers, ensuring bit-for-bit invariance to future target changes.
+    """
+    df = pd.DataFrame(records).sort_values("year").reset_index(drop=True)
+    if fold_index < 2 or fold_index >= len(df):
+        raise ValueError(f"Invalid fold_index {fold_index} for series of length {len(df)}")
+    train_slice = df.iloc[:fold_index]
+    X_train = np.column_stack([
+        train_slice["year"].iloc[1:].values,
+        train_slice["total_org_tco2e"].iloc[:-1].values
+    ])
+    y_train = train_slice["total_org_tco2e"].iloc[1:].values
+    model = make_pipeline(StandardScaler(), Ridge(alpha=1.0))
+    model.fit(X_train, y_train)
+    target_year = int(df["year"].iloc[fold_index])
+    last_train_val = float(train_slice["total_org_tco2e"].iloc[-1])
+    pred = float(model.predict([[target_year, last_train_val]])[0])
+    return {
+        "target_year": target_year,
+        "prediction": pred,
+        "X_train": X_train.tolist(),
+        "y_train": y_train.tolist(),
+    }
+
 
 def ml_engine_agent(state: CarbonAgentState) -> dict:
     records = state.get("annual_emissions_records", [])
@@ -29,27 +59,52 @@ def ml_engine_agent(state: CarbonAgentState) -> dict:
             "agent_logs": logs
         }
 
-    logs.append("🧠 [ML Engine Agent] Running Walk-Forward Validation vs Naive Persistence Baseline & Method Agreement...")
+    logs.append("🧠 [ML Engine Agent] Running Leak-Free Walk-Forward Validation vs Naive Persistence Baseline & Method Agreement...")
     df = pd.DataFrame(records).sort_values("year").reset_index(drop=True)
     n = len(df)
-
-    df["lag1_org_tco2e"] = df["total_org_tco2e"].shift(1).bfill()
-    X = df[["year", "lag1_org_tco2e"]].values
-    y = df["total_org_tco2e"].values
     years = df["year"].values
+    y = df["total_org_tco2e"].values
 
     min_train_size = max(3, min(int(n * 0.6), n - 2))
     y_true_wf, y_pred_wf, y_naive_wf, test_years = [], [], [], []
+    fold_predictions = []
 
+    # Strictly leak-free expanding window walk-forward validation
     for i in range(min_train_size, n):
-        model_step = make_pipeline(StandardScaler(), Ridge(alpha=1.0))
-        model_step.fit(X[:i], y[:i])
-        pred_i = float(model_step.predict(X[i:i+1])[0])
+        # 1. Slice training series strictly BEFORE computing lag features or scaling
+        train_slice = df.iloc[:i]
+        
+        # 2. Build autoregressive lag features strictly inside the fold's training slice
+        # Row 0 has no preceding lag, so training pairs start from index 1
+        X_train_i = np.column_stack([
+            train_slice["year"].iloc[1:].values,
+            train_slice["total_org_tco2e"].iloc[:-1].values  # lag1
+        ])
+        y_train_i = train_slice["total_org_tco2e"].iloc[1:].values
 
-        y_true_wf.append(float(y[i]))
+        # 3. Fit scaler and Ridge regression strictly on (X_train_i, y_train_i)
+        model_step = make_pipeline(StandardScaler(), Ridge(alpha=1.0))
+        model_step.fit(X_train_i, y_train_i)
+
+        # 4. Predict one-step-ahead test target at index i using last training ground-truth as lag1
+        target_year = int(years[i])
+        last_train_target = float(train_slice["total_org_tco2e"].iloc[-1])
+        X_test_i = np.array([[target_year, last_train_target]])
+        pred_i = float(model_step.predict(X_test_i)[0])
+
+        true_val = float(y[i])
+        naive_val = last_train_target
+
+        y_true_wf.append(true_val)
         y_pred_wf.append(pred_i)
-        y_naive_wf.append(float(y[i - 1]))
-        test_years.append(int(years[i]))
+        y_naive_wf.append(naive_val)
+        test_years.append(target_year)
+        fold_predictions.append({
+            "year": target_year,
+            "y_true": true_val,
+            "y_pred": pred_i,
+            "y_naive": naive_val,
+        })
 
     y_true_arr = np.array(y_true_wf)
     y_pred_arr = np.array(y_pred_wf)
@@ -79,13 +134,22 @@ def ml_engine_agent(state: CarbonAgentState) -> dict:
             f"({naive_rmse:.2f} tCO2e) by {skill_over_naive_pct:.2f}%."
         )
 
+    # Fit full model strictly on all historical pairs
+    X_full = np.column_stack([
+        df["year"].iloc[1:].values,
+        df["total_org_tco2e"].iloc[:-1].values  # lag1
+    ])
+    y_full = df["total_org_tco2e"].iloc[1:].values
+
     full_model = make_pipeline(StandardScaler(), Ridge(alpha=1.0))
-    full_model.fit(X, y)
+    full_model.fit(X_full, y_full)
+
     last_year = int(df["year"].max())
     fc_start_year = last_year + 1
     fc_end_year = max(2030, last_year + 7)
-    current_lag = float(df["total_org_tco2e"].iloc[-1])
 
+    # Recursive autoregressive multi-step projection without ground-truth peeking
+    current_lag = float(df["total_org_tco2e"].iloc[-1])
     forecast_records = []
     for step, yr in enumerate(range(fc_start_year, fc_end_year + 1), start=1):
         x_next = np.array([[yr, current_lag]])
@@ -99,17 +163,27 @@ def ml_engine_agent(state: CarbonAgentState) -> dict:
         })
         current_lag = pred_val
 
+    # Anomaly Z-Score without future look-ahead (expanding statistics)
     df["org_yoy_clean"] = df["org_yoy_pct"].fillna(0.0)
     df["owid_yoy_clean"] = df["owid_national_yoy_pct"].fillna(0.0)
-    X_anom = StandardScaler().fit_transform(df[["org_yoy_clean", "owid_yoy_clean"]].values)
 
-    std_val = float(df["org_yoy_clean"].std()) if len(df) > 1 else 0.0
-    z_scores = (df["org_yoy_clean"] - df["org_yoy_clean"].mean()) / max(std_val, 1e-5)
-    parametric_flags = (z_scores.abs() >= 1.65).astype(int).values
-    if parametric_flags.sum() == 0:
-        parametric_flags[z_scores.abs().idxmax()] = 1
+    z_scores = []
+    for t in range(len(df)):
+        hist_slice = df["org_yoy_clean"].iloc[:t+1]
+        if len(hist_slice) < 3:
+            z_scores.append(0.0)
+        else:
+            m_t = float(hist_slice.mean())
+            s_t = float(hist_slice.std())
+            z_scores.append((float(df["org_yoy_clean"].iloc[t]) - m_t) / max(s_t, 1e-5))
+
+    z_series = pd.Series(z_scores, index=df.index)
+    parametric_flags = (z_series.abs() >= 1.65).astype(int).to_numpy(copy=True)
+    if parametric_flags.sum() == 0 and len(z_scores) > 0:
+        parametric_flags[int(z_series.abs().idxmax())] = 1
 
     contamination_rate = max(0.05, min(0.25, float(parametric_flags.mean())))
+    X_anom = StandardScaler().fit_transform(df[["org_yoy_clean", "owid_yoy_clean"]].values)
     iso = IsolationForest(contamination=contamination_rate, random_state=42)
     iso_flags = np.where(iso.fit_predict(X_anom) == -1, 1, 0)
 
@@ -135,6 +209,7 @@ def ml_engine_agent(state: CarbonAgentState) -> dict:
         "test_period": test_period_str,
         "forecast_horizon_label": horizon_label,
         "walk_forward_folds": int(len(y_true_arr)),
+        "fold_predictions": fold_predictions,
         "r2_score": round(wf_r2, 4),
         "rmse_tco2e": round(wf_rmse, 2),
         "mae_tco2e": round(wf_mae, 2),

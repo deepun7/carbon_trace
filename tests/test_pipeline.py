@@ -28,12 +28,12 @@ def _dashboard_state():
             "benchmark_country": "India",
             "start_year": 2020,
             "end_year": 2023,
-            "data_provenance": "SIMULATED_DEMO",
+            "data_provenance": "SYNTHETIC_DEMO",
             "cin_number": "L17110MH1973PLC019786",
             "bse_code": "500325",
             "nse_symbol": "RELIANCE",
             "filing_section": "Section E: Principle 6",
-            "brsr_data_provenance": "VERIFIED_BRSR_FILING",
+            "brsr_data_provenance": "VERIFIED_BRSR_EXTRACTED",
             "end_org_tco2e": 4215.63,
             "org_net_change_pct": 8.45,
             "owid_national_end_co2_mt": 3062.756,
@@ -53,7 +53,7 @@ def _dashboard_state():
         "forecast_records": [{"year": 2024, "predicted_org_tco2e": 4300.0}],
         "anomalies_detected": [],
         "draft_report": "CarbonTrace test report",
-        "data_quality_report": {"data_provenance": "SIMULATED_DEMO"},
+        "data_quality_report": {"data_provenance": "SYNTHETIC_DEMO"},
         "agent_logs": ["test run"],
         "critic_approved": True,
         "faithfulness_score": 100.0,
@@ -97,13 +97,13 @@ def test_1_emission_factor_arithmetic_and_multi_facility_aggregation():
             "org_id": "TestOrg", "facility_id": "FAC-1", "year": 2022,
             "stationary_diesel_liters": 1000.0, "natural_gas_m3": 500.0, "fleet_transport_km": 1000.0,
             "purchased_electricity_kwh": 10000.0, "business_air_travel_pkm": 1000.0,
-            "supply_chain_freight_ton_km": 1000.0, "data_provenance": "SIMULATED_DEMO"
+            "supply_chain_freight_ton_km": 1000.0, "data_provenance": "SYNTHETIC_DEMO"
         },
         {
             "org_id": "TestOrg", "facility_id": "FAC-2", "year": 2022,
             "stationary_diesel_liters": 1000.0, "natural_gas_m3": 500.0, "fleet_transport_km": 1000.0,
             "purchased_electricity_kwh": 10000.0, "business_air_travel_pkm": 1000.0,
-            "supply_chain_freight_ton_km": 1000.0, "data_provenance": "SIMULATED_DEMO"
+            "supply_chain_freight_ton_km": 1000.0, "data_provenance": "SYNTHETIC_DEMO"
         },
     ]
     state = {
@@ -174,7 +174,7 @@ def test_4_short_time_series_eight_year_and_baseline_warning():
 def test_5_critic_rejects_missing_or_incorrect_figures():
     state = {
         "draft_report": "## 1. Executive Summary\nWrong total: 999999.99 tCO2e.",
-        "computed_metrics": {"end_org_tco2e": 4215.63, "org_net_change_pct": 81.45, "owid_national_end_co2_mt": 3062.756, "data_provenance": "SIMULATED_DEMO"},
+        "computed_metrics": {"end_org_tco2e": 4215.63, "org_net_change_pct": 81.45, "owid_national_end_co2_mt": 3062.756, "data_provenance": "SYNTHETIC_DEMO"},
         "scope_breakdown": {"Scope 1": 1000.0, "Scope 2": 2000.0, "Scope 3": 1215.63}, "agent_logs": []
     }
     assert critic_agent(state)["critic_approved"] is False
@@ -296,7 +296,7 @@ def test_cin_registry_lookup(company, cin, bse, nse, section):
     assert metadata["org_name"] == company
     assert metadata["bse_code"] == bse
     assert metadata["nse_symbol"] == nse
-    assert metadata["data_provenance"] == "VERIFIED_BRSR_FILING"
+    assert metadata["data_provenance"] == "SYNTHETIC_DEMO"
     assert metadata["filing_section"] == section
 
 
@@ -595,3 +595,68 @@ def test_itc_end_to_end_pipeline_run():
     assert metrics["energy_consumption_value"] == 24025.0
     assert len(state["annual_emissions_records"]) >= 10
     assert len(state["forecast_records"]) >= 5
+
+
+def test_ml_walk_forward_anti_leakage():
+    """
+    Mathematical Anti-Leakage Invariance Test:
+    Ensures that mutating future out-of-fold ground truth records y[t+1:] has ZERO effect
+    on the expanding-window walk-forward model trained strictly on historical data y[:t].
+    """
+    from agents.ml_engine import predict_walk_forward_fold
+    records = [
+        {"year": 2015 + i, "total_org_tco2e": 1000.0 + i * 50.0}
+        for i in range(8)
+    ]
+    fold_idx = 5
+    pred_orig = predict_walk_forward_fold(records, fold_index=fold_idx)
+
+    # Mutate future ground-truth values (fold_idx + 1 onward) with arbitrary corrupted values
+    corrupted_records = [dict(r) for r in records]
+    corrupted_records[6]["total_org_tco2e"] = 99999999.0
+    corrupted_records[7]["total_org_tco2e"] = -88888888.0
+    pred_corrupted = predict_walk_forward_fold(corrupted_records, fold_index=fold_idx)
+
+    assert pred_orig == pred_corrupted, (
+        f"Data leakage detected! Mutation of future records changed fold prediction: "
+        f"{pred_orig} != {pred_corrupted}"
+    )
+
+
+def test_scanned_image_ocr_pipeline(tmp_path, monkeypatch):
+    """
+    Raster Image OCR Fallback Integration Test:
+    Creates an image-only PDF with zero digital text layer and verifies that the dual-engine
+    pipeline accurately classifies it as SCANNED_IMAGE_OCR and executes the OCR route.
+    """
+    from PIL import Image, ImageDraw
+    import agents.brsr_extractor as brsr_mod
+
+    # Create a synthetic scanned document page
+    img = Image.new("RGB", (800, 400), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    draw.text((30, 30), "BRSR Environmental Disclosures", fill=(0, 0, 0))
+    draw.text((30, 70), "Company: Scanned Testing Corp", fill=(0, 0, 0))
+    draw.text((30, 110), "CIN: L12345MH2020PLC123456", fill=(0, 0, 0))
+    draw.text((30, 150), "Section E: Principle 6", fill=(0, 0, 0))
+    draw.text((30, 190), "Scope 1 emissions (tCO2e) 5000.0", fill=(0, 0, 0))
+    draw.text((30, 230), "Scope 2 emissions (tCO2e) 2000.0", fill=(0, 0, 0))
+
+    pdf_path = str(tmp_path / "scanned_invoice.pdf")
+    img.save(pdf_path, "PDF")
+
+    if not brsr_mod._configure_tesseract():
+        mock_ocr = (
+            "BRSR Environmental Disclosures\n"
+            "Company: Scanned Testing Corp\n"
+            "CIN: L12345MH2020PLC123456\n"
+            "Section E: Principle 6\n"
+            "Scope 1 emissions (tCO2e) 5000.0\n"
+            "Scope 2 emissions (tCO2e) 2000.0\n"
+        )
+        monkeypatch.setattr(brsr_mod, "_run_ocr_on_pdf_bytes", lambda b: (mock_ocr, []))
+
+    res = brsr_mod.extract_brsr_pdf(pdf_path)
+    assert res["document_format"] == "SCANNED_IMAGE_OCR"
+    assert "ocr" in res["extraction_engine"]
+    assert res["pages_scanned"] >= 1

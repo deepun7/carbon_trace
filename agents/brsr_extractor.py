@@ -6,14 +6,28 @@ import shutil
 from typing import Any
 
 from pypdf import PdfReader
-import pdfplumber
+
+try:
+    import pdfplumber
+except ImportError:
+    pdfplumber = None
+
+try:
+    import pdf2image
+except ImportError:
+    pdf2image = None
 
 try:
     import pypdfium2 as pdfium
 except ImportError:
     pdfium = None
 
-from PIL import Image, ImageEnhance, ImageOps
+try:
+    from PIL import Image, ImageEnhance, ImageOps
+except ImportError:
+    Image = None
+    ImageEnhance = None
+    ImageOps = None
 
 try:
     import pytesseract
@@ -104,7 +118,7 @@ def resolve_company_metadata(org_name: str = None, cin_number: str = None) -> di
             return {
                 "cin_number": validate_cin(cin_number),
                 "org_name": org_name or "Unknown Entity",
-                "data_provenance": "VERIFIED_BRSR_FILING",
+                "data_provenance": "VERIFIED_BRSR_EXTRACTED",
                 "filing_section": "Section E / C: Principle 6",
             }
     if not org_name:
@@ -655,29 +669,39 @@ def extract_brsr_principle_6_text(text: str) -> dict[str, Any]:
 
 def _run_ocr_on_pdf_bytes(pdf_bytes: bytes) -> tuple[str, list[list[list[Any]]]]:
     """Engine 2: Render PDF pages to images and execute pre-processed OCR via pytesseract."""
-    if pdfium is None:
-        return "", []
-    try:
-        doc = pdfium.PdfDocument(pdf_bytes)
-        total_pages = len(doc)
-    except Exception:
-        return "", []
-    extracted_text_pages = []
-
     has_tesseract = _configure_tesseract()
+    pil_images: list[Any] = []
 
-    for page_idx in range(total_pages):
-        page = doc[page_idx]
-        # Render high-resolution PIL image
-        pil_img = page.render(scale=2.0).to_pil()
+    if pdfium is not None:
+        try:
+            doc = pdfium.PdfDocument(pdf_bytes)
+            for page_idx in range(len(doc)):
+                page = doc[page_idx]
+                pil_images.append(page.render(scale=2.0).to_pil())
+        except Exception:
+            pass
 
+    if not pil_images and pdf2image is not None:
+        try:
+            pil_images = pdf2image.convert_from_bytes(pdf_bytes)
+        except Exception:
+            pass
+
+    if not pil_images:
+        return "", []
+
+    extracted_text_pages = []
+    for pil_img in pil_images:
         if has_tesseract and pytesseract is not None:
             try:
                 # Pre-processing: Grayscale -> Contrast Enhancement -> Auto Thresholding
                 gray = pil_img.convert("L")
-                enhancer = ImageEnhance.Contrast(gray)
-                contrast_img = enhancer.enhance(1.8)
-                binarized = contrast_img.point(lambda p: 255 if p > 150 else 0)
+                if ImageEnhance is not None:
+                    enhancer = ImageEnhance.Contrast(gray)
+                    contrast_img = enhancer.enhance(1.8)
+                    binarized = contrast_img.point(lambda p: 255 if p > 150 else 0)
+                else:
+                    binarized = gray
                 ocr_text = pytesseract.image_to_string(binarized, config="--psm 6")
                 extracted_text_pages.append(ocr_text)
             except Exception:
@@ -691,6 +715,14 @@ def extract_brsr_pdf(pdf_file: str | os.PathLike | bytes | bytearray | io.BytesI
     """Universal production BRSR extractor implementing Dual-Engine (Digital + OCR) fallback."""
     if filename is None and isinstance(pdf_file, (str, os.PathLike)):
         filename = os.path.basename(str(pdf_file))
+
+    # Path resolution: check if file exists, else check in data/ directory
+    if isinstance(pdf_file, (str, os.PathLike)):
+        path_str = str(pdf_file)
+        if not os.path.exists(path_str):
+            candidate = os.path.join("data", os.path.basename(path_str))
+            if os.path.exists(candidate):
+                pdf_file = candidate
 
     pdf_bytes: bytes
     if isinstance(pdf_file, (bytes, bytearray)):
@@ -710,16 +742,22 @@ def extract_brsr_pdf(pdf_file: str | os.PathLike | bytes | bytearray | io.BytesI
     digital_text_pages: list[str] = []
     digital_tables: list[list[list[Any]]] = []
     total_pages = 0
+    used_pdfplumber = False
 
-    try:
-        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
-            total_pages = len(pdf.pages)
-            for page in pdf.pages:
-                p_text = page.extract_text() or ""
-                digital_text_pages.append(p_text)
-                tables = page.extract_tables() or []
-                digital_tables.extend(tables)
-    except Exception:
+    if pdfplumber is not None:
+        try:
+            with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+                total_pages = len(pdf.pages)
+                for page in pdf.pages:
+                    p_text = page.extract_text() or ""
+                    digital_text_pages.append(p_text)
+                    tables = page.extract_tables() or []
+                    digital_tables.extend(tables)
+                used_pdfplumber = True
+        except Exception:
+            pass
+
+    if not digital_text_pages:
         try:
             reader = PdfReader(io.BytesIO(pdf_bytes))
             total_pages = len(reader.pages)
@@ -734,57 +772,36 @@ def extract_brsr_pdf(pdf_file: str | os.PathLike | bytes | bytearray | io.BytesI
     avg_chars_per_page = total_chars / max(1, total_pages)
 
     document_format = "NATIVE_DIGITAL_TEXT"
-    extraction_engine = "pdfplumber+pypdf"
+    extraction_engine = "pdfplumber+pypdf" if used_pdfplumber else "pypdf"
     final_text = full_digital_text
     final_tables = digital_tables
 
     # -------------------------------------------------------------
-    # ENGINE 2: Scanned Image OCR Fallback (pypdfium2 + pytesseract)
+    # ENGINE 2: Scanned Image OCR Fallback (pypdfium2 / pdf2image + pytesseract)
     # -------------------------------------------------------------
     if avg_chars_per_page < 150:
         document_format = "SCANNED_IMAGE_OCR"
-        extraction_engine = "ocr_tesseract+pypdfium2"
+        extraction_engine = "ocr_tesseract"
         ocr_text, _ = _run_ocr_on_pdf_bytes(pdf_bytes)
         if ocr_text.strip():
             final_text = ocr_text
         elif not full_digital_text.strip():
+            # If host OCR is not available (e.g. no tesseract binary), return informative message
+            ocr_available = _configure_tesseract()
+            if not ocr_available:
+                raise ValueError(
+                    "No extractable text found in BRSR PDF: document is scanned/image-based (under 150 chars/page) "
+                    "and Tesseract OCR binary is not installed or configured on the host system."
+                )
             raise ValueError(
                 "No extractable text found in BRSR PDF: page character count is under threshold (150 chars/page) "
-                "and host OCR subsystem is unavailable."
+                "and host OCR subsystem produced empty text."
             )
 
     # -------------------------------------------------------------
     # DYNAMIC REGULATORY PARSING & NORMALIZATION
     # -------------------------------------------------------------
     cin_number, company_name, financial_year, previous_financial_year, assurance_provider = _extract_corporate_identity(final_text)
-
-    # Filename heuristic overrides or complements parsed identity
-    if filename:
-        fn = filename.lower()
-        if "hcl" in fn:
-            company_name = "HCL Technologies Limited"
-            cin_number = "L74140DL1991PLC046369"
-        elif "tcs" in fn or "consultancy" in fn:
-            company_name = "Tata Consultancy Services Limited"
-            cin_number = "L22210MH1995PLC084781"
-        elif "infy" in fn or "infosys" in fn:
-            company_name = "Infosys Limited"
-            cin_number = "L85110KA1981PLC013115"
-        elif "wipro" in fn:
-            company_name = "Wipro Limited"
-            cin_number = "L32102KA1945PLC020800"
-        elif "reliance" in fn or "ril" in fn:
-            company_name = "Reliance Industries Limited"
-            cin_number = "L17110MH1973PLC019786"
-        elif "ntpc" in fn:
-            company_name = "NTPC Limited"
-            cin_number = "L40101DL1975GOI007966"
-        elif "tata" in fn and "steel" in fn:
-            company_name = "Tata Steel Limited"
-            cin_number = "L27100MH1907PLC000260"
-        elif "itc" in fn:
-            company_name = "ITC Limited"
-            cin_number = "L16005WB1910PLC001985"
 
     # Attempt structured table extraction first, fallback to regex text parsing
     emissions_from_tables = _extract_emissions_from_tables(final_tables, final_text)
@@ -937,7 +954,7 @@ def extract_brsr_pdf(pdf_file: str | os.PathLike | bytes | bytearray | io.BytesI
         "ghg_emission_intensity_tco2e_per_crore": emissions_from_tables.get("ghg_emission_intensity_tco2e_per_crore"),
         "disclosures_matrix": disclosures_matrix,
         "previous_fy_data": previous_fy_data,
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "VERIFIED_BRSR_EXTRACTED",
         "section_text": text_results.get("section_text", ""),
     }
     if energy_final:
@@ -1004,14 +1021,14 @@ def persist_extracted_brsr_record(extracted: dict[str, Any], db_path: str = None
             org_name, cin_number, bse_code, nse_symbol, filing_section, source,
             data_provenance, reported_scope_1_tco2e, reported_scope_2_tco2e, reported_scope_3_tco2e,
             energy_consumption_value, energy_consumption_unit, energy_consumption_kwh
-        ) VALUES (?, ?, ?, ?, ?, ?, 'VERIFIED_BRSR_FILING', ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, 'VERIFIED_BRSR_EXTRACTED', ?, ?, ?, ?, ?, ?)
         ON CONFLICT(org_name) DO UPDATE SET
             cin_number = excluded.cin_number,
             bse_code = excluded.bse_code,
             nse_symbol = excluded.nse_symbol,
             filing_section = excluded.filing_section,
             source = excluded.source,
-            data_provenance = 'VERIFIED_BRSR_FILING',
+            data_provenance = 'VERIFIED_BRSR_EXTRACTED',
             reported_scope_1_tco2e = excluded.reported_scope_1_tco2e,
             reported_scope_2_tco2e = excluded.reported_scope_2_tco2e,
             reported_scope_3_tco2e = excluded.reported_scope_3_tco2e,
@@ -1046,6 +1063,7 @@ def persist_extracted_brsr_record(extracted: dict[str, Any], db_path: str = None
         years = list(range(2000, end_year + 1))
         for idx, yr in enumerate(years):
             trend_factor = 0.55 + 0.45 * (idx / max(1, len(years) - 1))
+            row_provenance = "VERIFIED_BRSR_EXTRACTED" if yr in (end_year, end_year - 1) else "SYNTHETIC_DEMO"
             cur.execute("""
                 INSERT OR REPLACE INTO enterprise_activity_logs (
                     org_id, facility_id, year,
@@ -1054,7 +1072,7 @@ def persist_extracted_brsr_record(extracted: dict[str, Any], db_path: str = None
                     supply_chain_freight_ton_km, data_provenance,
                     cin_number, bse_code, nse_symbol, filing_section,
                     reported_scope_1_tco2e, reported_scope_2_tco2e, reported_scope_3_tco2e
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'VERIFIED_BRSR_FILING', ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 org_name, "FAC-BRSR-01", yr,
                 round(d_target * trend_factor, 2),
@@ -1063,6 +1081,7 @@ def persist_extracted_brsr_record(extracted: dict[str, Any], db_path: str = None
                 round(el_target * trend_factor, 2),
                 round(air_target * trend_factor, 2),
                 round(fr_target * trend_factor, 2),
+                row_provenance,
                 cin, bse, nse, filing_section,
                 s1, s2, s3
             ))
@@ -1071,9 +1090,9 @@ def persist_extracted_brsr_record(extracted: dict[str, Any], db_path: str = None
             UPDATE enterprise_activity_logs
             SET cin_number = ?, bse_code = ?, nse_symbol = ?, filing_section = ?,
                 reported_scope_1_tco2e = ?, reported_scope_2_tco2e = ?, reported_scope_3_tco2e = ?,
-                data_provenance = 'VERIFIED_BRSR_FILING'
+                data_provenance = CASE WHEN year >= ? - 1 THEN 'VERIFIED_BRSR_EXTRACTED' ELSE 'SYNTHETIC_DEMO' END
             WHERE LOWER(org_id) = LOWER(?)
-        """, (cin, bse, nse, filing_section, s1, s2, s3, org_name))
+        """, (cin, bse, nse, filing_section, s1, s2, s3, end_year, org_name))
 
     conn.commit()
     conn.close()

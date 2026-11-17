@@ -49,7 +49,7 @@ def calculation_agent(state: CarbonAgentState) -> dict:
     fac_count = int(org_df["facilities_aggregated"].max()) if "facilities_aggregated" in org_df.columns else (
         int(org_df["facility_id"].nunique()) if "facility_id" in org_df.columns else 1
     )
-    provenance = str(org_df["data_provenance"].iloc[0]) if "data_provenance" in org_df.columns else "SIMULATED_DEMO"
+    provenance = str(org_df["data_provenance"].iloc[0]) if "data_provenance" in org_df.columns else "SYNTHETIC_DEMO"
 
     org_yearly = (
         org_df.groupby(["org_id", "year"], as_index=False)[NUMERIC_ACTIVITY_COLS]

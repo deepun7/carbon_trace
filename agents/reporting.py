@@ -16,7 +16,7 @@ def compile_deterministic_verified_report(state: CarbonAgentState, llm_summary: 
     anoms = state.get("anomalies_detected", [])
     fc = state.get("forecast_records", [])
 
-    provenance = m.get("data_provenance", "SIMULATED_DEMO")
+    provenance = m.get("data_provenance", "SYNTHETIC_DEMO")
     fac_count = m.get("facilities_aggregated", 1)
     horizon_label = ml.get("forecast_horizon_label", "Future Horizon")
 

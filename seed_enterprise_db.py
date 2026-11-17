@@ -194,7 +194,7 @@ CORPORATE_CIN_REGISTRY = [
         "nse_symbol": "ITC",
         "filing_section": "Section C: Principle 6",
         "source": "Report and Accounts / BRSR — Section C: Principle 6 (Assurance: KPMG ISAE 3000)",
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "SYNTHETIC_DEMO",
         "reported_scope_1_tco2e": 1045000.0,
         "reported_scope_2_tco2e": 170000.0,
         "reported_scope_3_tco2e": 1442000.0,
@@ -209,7 +209,7 @@ CORPORATE_CIN_REGISTRY = [
         "nse_symbol": "RELIANCE",
         "filing_section": "Section E: Principle 6",
         "source": "BSE/NSE BRSR Section E: Principle 6",
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "SYNTHETIC_DEMO",
         "reported_scope_1_tco2e": 27650000.0,
         "reported_scope_2_tco2e": 9420000.0,
         "reported_scope_3_tco2e": None,
@@ -224,7 +224,7 @@ CORPORATE_CIN_REGISTRY = [
         "nse_symbol": "NTPC",
         "filing_section": "Section E: Principle 6",
         "source": "BSE/NSE BRSR Section E: Principle 6",
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "SYNTHETIC_DEMO",
         "reported_scope_1_tco2e": 238200000.0,
         "reported_scope_2_tco2e": 410000.0,
         "reported_scope_3_tco2e": None,
@@ -239,7 +239,7 @@ CORPORATE_CIN_REGISTRY = [
         "nse_symbol": "TATASTEEL",
         "filing_section": "Section E: Principle 6",
         "source": "BSE/NSE BRSR Section E: Principle 6",
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "SYNTHETIC_DEMO",
         "reported_scope_1_tco2e": 24700000.0,
         "reported_scope_2_tco2e": 2150000.0,
         "reported_scope_3_tco2e": None,
@@ -254,7 +254,7 @@ CORPORATE_CIN_REGISTRY = [
         "nse_symbol": "HCLTECH",
         "filing_section": "Section C: Principle 6",
         "source": "BSE/NSE Annual BRSR Filing — Principle 6 (Assurance: KPMG ISAE 3000)",
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "SYNTHETIC_DEMO",
         "reported_scope_1_tco2e": 28450.0,
         "reported_scope_2_tco2e": 142100.0,
         "reported_scope_3_tco2e": 215000.0,
@@ -269,7 +269,7 @@ CORPORATE_CIN_REGISTRY = [
         "nse_symbol": "INFY",
         "filing_section": "Section C: Principle 6",
         "source": "BSE/NSE Annual BRSR Filing — Principle 6 (Assurance: KPMG ISAE 3000)",
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "SYNTHETIC_DEMO",
         "reported_scope_1_tco2e": 18200.0,
         "reported_scope_2_tco2e": 89500.0,
         "reported_scope_3_tco2e": 312000.0,
@@ -284,7 +284,7 @@ CORPORATE_CIN_REGISTRY = [
         "nse_symbol": "TCS",
         "filing_section": "Section C: Principle 6",
         "source": "BSE/NSE Annual BRSR Filing — Principle 6 (Assurance: PwC ISAE 3000)",
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "SYNTHETIC_DEMO",
         "reported_scope_1_tco2e": 32100.0,
         "reported_scope_2_tco2e": 165000.0,
         "reported_scope_3_tco2e": 450000.0,
@@ -299,7 +299,7 @@ CORPORATE_CIN_REGISTRY = [
         "nse_symbol": "WIPRO",
         "filing_section": "Section C: Principle 6",
         "source": "BSE/NSE Annual BRSR Filing — Principle 6 (Assurance: DNV ISAE 3000)",
-        "data_provenance": "VERIFIED_BRSR_FILING",
+        "data_provenance": "SYNTHETIC_DEMO",
         "reported_scope_1_tco2e": 15300.0,
         "reported_scope_2_tco2e": 120400.0,
         "reported_scope_3_tco2e": 185000.0,
@@ -317,32 +317,32 @@ def _build_seed_rows() -> list[tuple]:
             "Apex Manufacturing Pvt Ltd", "FAC-IN-01", yr,
             round(d * 0.60, 2), round(ng * 0.60, 2), round(fl * 0.60, 2),
             round(el * 0.60, 2), round(air * 0.60, 2), round(fr * 0.60, 2),
-            "SIMULATED_DEMO"
+            "SYNTHETIC_DEMO"
         ))
         rows.append((
             "Apex Manufacturing Pvt Ltd", "FAC-IN-02", yr,
             round(d * 0.40, 2), round(ng * 0.40, 2), round(fl * 0.40, 2),
             round(el * 0.40, 2), round(air * 0.40, 2), round(fr * 0.40, 2),
-            "SIMULATED_DEMO"
+            "SYNTHETIC_DEMO"
         ))
     for yr, d, ng, fl, el, air, fr in BASE_SERIES:
         rows.append((
             "GreenGrid Logistics Corp", "FAC-GG-01", yr,
             round(d * 0.35, 2), round(ng * 0.25, 2), round(fl * 0.85, 2),
             round(el * 0.45, 2), round(air * 0.30, 2), round(fr * 0.90, 2),
-            "SIMULATED_DEMO"
+            "SYNTHETIC_DEMO"
         ))
         rows.append((
             "GreenGrid Logistics Corp", "FAC-GG-02", yr,
             round(d * 0.25, 2), round(ng * 0.15, 2), round(fl * 0.55, 2),
             round(el * 0.30, 2), round(air * 0.20, 2), round(fr * 0.60, 2),
-            "SIMULATED_DEMO"
+            "SYNTHETIC_DEMO"
         ))
     return rows
 
 
 def _build_listed_company_activity_rows() -> list[tuple]:
-    """Create verified operational telemetry records for Indian listed corporations."""
+    """Create operational telemetry records for Indian listed corporations (labeled SYNTHETIC_DEMO until real filing is extracted)."""
     rows = []
     activity_scales = {
         "ITC Limited": 1.05,
@@ -356,7 +356,7 @@ def _build_listed_company_activity_rows() -> list[tuple]:
     }
     for company in CORPORATE_CIN_REGISTRY:
         scale = activity_scales.get(company["org_name"], 1.10)
-        prov = company.get("data_provenance", "VERIFIED_BRSR_FILING")
+        prov = "SYNTHETIC_DEMO"
         for yr, d, ng, fl, el, air, fr in BASE_SERIES:
             rows.append((
                 company["org_name"], "FAC-LISTED-01", yr,
@@ -379,7 +379,7 @@ def _create_activity_table(cur: sqlite3.Cursor):
             purchased_electricity_kwh REAL NOT NULL,
             business_air_travel_pkm REAL NOT NULL,
             supply_chain_freight_ton_km REAL NOT NULL,
-            data_provenance TEXT NOT NULL DEFAULT 'SIMULATED_DEMO',
+            data_provenance TEXT NOT NULL DEFAULT 'SYNTHETIC_DEMO',
             cin_number TEXT,
             bse_code TEXT,
             nse_symbol TEXT,
@@ -434,7 +434,7 @@ def initialize_enterprise_data_store(force_reset: bool = False):
                 purchased_electricity_kwh REAL NOT NULL,
                 business_air_travel_pkm REAL NOT NULL,
                 supply_chain_freight_ton_km REAL NOT NULL,
-                data_provenance TEXT NOT NULL DEFAULT 'SIMULATED_DEMO',
+                data_provenance TEXT NOT NULL DEFAULT 'SYNTHETIC_DEMO',
                 cin_number TEXT,
                 bse_code TEXT,
                 nse_symbol TEXT,
@@ -454,7 +454,7 @@ def initialize_enterprise_data_store(force_reset: bool = False):
             SELECT 'Apex Manufacturing Pvt Ltd', facility_id, year,
                    stationary_diesel_liters, natural_gas_m3, fleet_transport_km,
                    purchased_electricity_kwh, business_air_travel_pkm,
-                   supply_chain_freight_ton_km, 'SIMULATED_DEMO'
+                   supply_chain_freight_ton_km, 'SYNTHETIC_DEMO'
             FROM _legacy_activity_logs
         """)
         cur.execute("DROP TABLE _legacy_activity_logs")
@@ -556,6 +556,7 @@ def initialize_enterprise_data_store(force_reset: bool = False):
         )
         for company in CORPORATE_CIN_REGISTRY
     ])
+    cur.execute("UPDATE enterprise_activity_logs SET data_provenance = 'SYNTHETIC_DEMO' WHERE data_provenance IN ('SIMULATED_DEMO', 'VERIFIED_BRSR_FILING')")
     conn.commit()
     conn.close()
 
